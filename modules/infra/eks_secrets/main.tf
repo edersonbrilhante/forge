@@ -2,39 +2,20 @@ locals {
   cicd_secrets_prefix = "/cicd/common"
 
   secrets = [
+
     {
-      name          = "${local.cicd_secrets_prefix}/splunk_access_ingest_token"
-      description   = "Splunk Observability Cloud Access Token for Ingest"
+      name          = "${local.cicd_secrets_prefix}/dockerhub_user"
+      description   = "DockerHub o11y User"
       recovery_days = 7
     },
     {
-      name          = "${local.cicd_secrets_prefix}/splunk_o11y_username"
-      description   = "Splunk o11y Username"
+      name          = "${local.cicd_secrets_prefix}/dockerhub_token"
+      description   = "DockerHub o11y Token"
       recovery_days = 7
     },
     {
-      name          = "${local.cicd_secrets_prefix}/splunk_o11y_password"
-      description   = "Splunk o11y Password"
-      recovery_days = 7
-    },
-    {
-      name          = "${local.cicd_secrets_prefix}/splunk_cloud_username"
-      description   = "Splunk Cloud Username"
-      recovery_days = 7
-    },
-    {
-      name          = "${local.cicd_secrets_prefix}/splunk_cloud_password"
-      description   = "Splunk Cloud Password"
-      recovery_days = 7
-    },
-    {
-      name          = "${local.cicd_secrets_prefix}/splunk_cloud_api_token"
-      description   = "Splunk Cloud API token"
-      recovery_days = 7
-    },
-    {
-      name          = "${local.cicd_secrets_prefix}/splunk_cloud_hec_token_eks"
-      description   = "Splunk Cloud HEC token for eks"
+      name          = "${local.cicd_secrets_prefix}/dockerhub_email"
+      description   = "DockerHub o11y Email"
       recovery_days = 7
     },
   ]
@@ -57,20 +38,20 @@ resource "aws_kms_key" "regional" {
   for_each = local.all_regions
   provider = aws.by_region[each.value]
 
-  description         = "Customer managed CMK for Splunk Secrets in ${each.key}"
+  description         = "Customer managed CMK for EKS Secrets in ${each.key}"
   enable_key_rotation = true
-  tags                = local.all_security_tags
-  tags_all            = local.all_security_tags
+
+  tags     = local.all_security_tags
+  tags_all = local.all_security_tags
 }
 
 resource "aws_kms_alias" "regional_alias" {
   for_each = aws_kms_key.regional
   provider = aws.by_region[each.key]
 
-  name          = "alias/splunk-cmk-${each.key}"
+  name          = "alias/eks-cmk-${each.key}"
   target_key_id = each.value.id
 }
-
 
 # Actual object containing the secret.
 resource "aws_secretsmanager_secret" "cicd_secrets" {

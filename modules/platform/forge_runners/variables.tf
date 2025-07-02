@@ -128,6 +128,12 @@ variable "arc_runner_specs" {
   }))
 }
 
+variable "migrate_arc_cluster" {
+  type        = bool
+  description = "Flag to indicate if the cluster is being migrated."
+  default     = false
+}
+
 variable "tags" {
   type        = map(string)
   description = "A map of tags to apply to resources."
