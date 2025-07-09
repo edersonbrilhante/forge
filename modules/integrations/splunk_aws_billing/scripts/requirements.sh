@@ -8,7 +8,8 @@ PACKAGE_DIR="${LAMBDA_PATH}/lambda_package/package"
 LAMBDA_PACKAGE_DIR="${LAMBDA_PATH}/lambda_package"
 ZIP_PATH="${LAMBDA_PACKAGE_DIR}/lambda.zip"
 REQUIREMENTS_FILE="${LAMBDA_DIR}/requirements.txt"
-HANDLER_FILE="${LAMBDA_DIR}/handler_per_service.py"
+HANDLER_FILE="${LAMBDA_DIR}/${2}.py"
+COMMON_FILE="${LAMBDA_DIR}/common.py"
 
 # ────────────── PRECHECKS ──────────────
 if [[ ! -f "$REQUIREMENTS_FILE" ]]; then
@@ -17,7 +18,7 @@ if [[ ! -f "$REQUIREMENTS_FILE" ]]; then
 fi
 
 if [[ ! -f "$HANDLER_FILE" ]]; then
-    echo "{\"status\": \"error\", \"message\": \"Missing handler_per_service.py in $LAMBDA_DIR\"}"
+    echo "{\"status\": \"error\", \"message\": \"Missing ${2}.py in $LAMBDA_DIR\"}"
     exit 1
 fi
 
@@ -48,7 +49,9 @@ zip -r9 "$ZIP_PATH" . >/dev/null
 
 cd "$LAMBDA_PACKAGE_DIR"
 cp "$HANDLER_FILE" .
-zip -g "$ZIP_PATH" handler_per_service.py >/dev/null
+cp "$COMMON_FILE" .
+zip -g "$ZIP_PATH" "${2}.py" >/dev/null
+zip -g "$ZIP_PATH" "common.py" >/dev/null
 
 # ────────────── DONE ──────────────
 echo "{\"status\": \"success\", \"zip_path\": \"$ZIP_PATH\"}"

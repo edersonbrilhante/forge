@@ -18,11 +18,12 @@ def create_event_body(row, fields):
     event_time = calendar.timegm(pd.to_datetime(usage_date).timetuple())
 
     return {
-        'source': 'aws-cur-per-service',
+        'source': 'aws-cur-per-resource',
         'sourcetype': 'forgecicd:aws:billing:cur',
         'index': common.SPLUNK_INDEX,
         'event': {
             'service': row['line_item_product_code'],
+            'resource_id': row['line_item_resource_id'],
             'aws_application': row['user_aws_application'],
             'cost_usd': float(Decimal(row['line_item_unblended_cost']).quantize(Decimal('0.00001'), rounding=ROUND_HALF_UP)),
             'net_cost_usd': float(Decimal(row['line_item_net_unblended_cost']).quantize(Decimal('0.00001'), rounding=ROUND_HALF_UP)),
@@ -64,17 +65,18 @@ def process_grouped_rows(grouped, now_ts):
         dimensions = {
             'usage_date': str(row['usage_date']),
             'service': row['line_item_product_code'],
+            'resource_id': row['line_item_resource_id'],
             'aws_application': row['user_aws_application'],
             **fields
         }
         metrics_batch.append({
-            'metric': 'forge.per_service.cost_usd',
+            'metric': 'forge.per_resource.cost_usd',
             'value': event_body['event']['cost_usd'],
             'timestamp': now_ts,
             'dimensions': dimensions
         })
         metrics_batch.append({
-            'metric': 'forge.per_service.net_cost_usd',
+            'metric': 'forge.per_resource.net_cost_usd',
             'value': event_body['event']['net_cost_usd'],
             'timestamp': now_ts,
             'dimensions': dimensions
@@ -99,10 +101,9 @@ def lambda_handler(event, context):
         obj = s3.get_object(Bucket=bucket, Key=key)
         df = pd.read_parquet(io.BytesIO(obj['Body'].read()))
 
-        df = common.preprocess_df(df)
-
         grouped = df.groupby(
-            ['usage_date', 'line_item_product_code', 'user_aws_application'],
+            ['usage_date', 'line_item_resource_id',
+                'line_item_product_code', 'user_aws_application'],
             as_index=False
         ).agg({
             'line_item_unblended_cost': 'sum',
