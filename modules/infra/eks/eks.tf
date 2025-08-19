@@ -9,10 +9,12 @@ data "aws_ami" "eks_default" {
 }
 
 module "ebs_csi_irsa_role" {
-  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
-  version = "5.54.1"
+  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts"
+  version = "6.1.0"
 
-  role_name             = "${var.cluster_name}-${var.aws_region}-ebs-csi"
+  name                  = "${var.cluster_name}-${var.aws_region}-ebs-csi"
+  use_name_prefix       = false
+  policy_name           = "${var.cluster_name}-${var.aws_region}-ebs-csi"
   attach_ebs_csi_policy = true
 
   oidc_providers = {
@@ -25,15 +27,19 @@ module "ebs_csi_irsa_role" {
 
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "20.37.1"
+  version = "21.1.0"
 
-  cluster_name    = var.cluster_name
-  cluster_version = var.cluster_version
+  name               = var.cluster_name
+  kubernetes_version = var.cluster_version
 
   vpc_id     = var.vpc_id
   subnet_ids = var.subnet_ids
 
-  cluster_endpoint_public_access = var.cluster_endpoint_public_access
+  addons = {
+    kube-proxy = {}
+  }
+
+  endpoint_public_access = var.cluster_endpoint_public_access
 
   authentication_mode = "API_AND_CONFIG_MAP"
 
@@ -59,38 +65,16 @@ module "eks" {
   cluster_tags = var.cluster_tags
 }
 
-resource "null_resource" "update_kubeconfig" {
+data "external" "update_kubeconfig" {
   depends_on = [module.eks]
+  program = ["bash", "-c", <<EOT
+    aws eks update-kubeconfig \
+      --region '${var.aws_region}' \
+      --name '${module.eks.cluster_name}' \
+      --alias '${module.eks.cluster_name}-${var.aws_profile}-${var.aws_region}' \
+      --profile '${var.aws_profile}' >/dev/null 2>&1
 
-  # Use triggers to always run the provisioner
-  triggers = {
-    always_run = timestamp()
-  }
-
-  provisioner "local-exec" {
-    command = <<EOT
-      aws eks update-kubeconfig \
-        --region ${var.aws_region} \
-        --name ${module.eks.cluster_name} \
-        --alias ${module.eks.cluster_name}-${var.aws_profile}-${var.aws_region} \
-        --profile ${var.aws_profile}
-    EOT
-  }
-}
-
-resource "null_resource" "delete_daemonset" {
-  depends_on = [
-    null_resource.update_kubeconfig,
-    module.eks
+    echo '{"updated":"true"}'
+  EOT
   ]
-  provisioner "local-exec" {
-    command = "kubectl delete daemonset -n kube-system aws-node"
-  }
-}
-
-resource "time_sleep" "wait_300_seconds" {
-  depends_on = [
-    module.eks
-  ]
-  create_duration = "300s"
 }

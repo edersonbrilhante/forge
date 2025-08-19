@@ -1,10 +1,10 @@
 module "self_managed_node_group" {
   source  = "terraform-aws-modules/eks/aws//modules/self-managed-node-group"
-  version = "20.37.1"
+  version = "21.1.0"
 
   name                = var.cluster_name
   cluster_name        = var.cluster_name
-  cluster_version     = var.cluster_version
+  kubernetes_version  = var.cluster_version
   cluster_endpoint    = module.eks.cluster_endpoint
   cluster_auth_base64 = module.eks.cluster_certificate_authority_data
 
@@ -12,7 +12,7 @@ module "self_managed_node_group" {
 
   block_device_mappings = {
     xvda = {
-      device_name = "/dev/sda1"
+      device_name = "/dev/xvda"
       ebs = {
         volume_size           = var.cluster_volume.size
         volume_type           = var.cluster_volume.type
@@ -36,13 +36,10 @@ module "self_managed_node_group" {
     module.eks.cluster_security_group_id,
   ]
 
-  ami_type = "AL2_x86_64"
+  ami_type = "AL2023_x86_64_STANDARD"
   ami_id   = data.aws_ami.eks_default.image_id
 
-  bootstrap_extra_args = <<-EOT
-    --use-max-pods false
-    --max-pods 100
-  EOT
+  user_data_template_path = "${path.module}/templates/node_config.yaml.tpl"
 
   cluster_service_cidr = module.eks.cluster_service_cidr
 
@@ -56,6 +53,6 @@ module "self_managed_node_group" {
   tags = local.all_security_tags
 
   depends_on = [
-    time_sleep.wait_300_seconds,
+    null_resource.patch_calico_installation,
   ]
 }

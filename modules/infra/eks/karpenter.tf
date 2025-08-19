@@ -1,6 +1,6 @@
 module "karpenter" {
   source  = "terraform-aws-modules/eks/aws//modules/karpenter"
-  version = "20.37.1"
+  version = "21.1.0"
 
   namespace    = "karpenter"
   cluster_name = var.cluster_name
@@ -15,35 +15,22 @@ module "karpenter" {
     AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
   }
 
-  enable_v1_permissions           = true
-  enable_pod_identity             = true
   create_pod_identity_association = true
 
   depends_on = [
-    time_sleep.wait_300_seconds,
+    null_resource.patch_calico_installation,
   ]
 
-}
-
-data "aws_ecrpublic_authorization_token" "token" {
-  provider = aws.karpenter
-
-  depends_on = [
-    time_sleep.wait_300_seconds,
-    module.eks
-  ]
 }
 
 resource "helm_release" "karpenter" {
-  name                = "karpenter"
-  namespace           = "karpenter"
-  create_namespace    = true
-  repository          = "oci://public.ecr.aws/karpenter"
-  repository_username = data.aws_ecrpublic_authorization_token.token.user_name
-  repository_password = data.aws_ecrpublic_authorization_token.token.password
-  chart               = "karpenter"
-  version             = "1.5.0"
-  wait                = false
+  name             = "karpenter"
+  namespace        = "karpenter"
+  create_namespace = true
+  repository       = "oci://public.ecr.aws/karpenter"
+  chart            = "karpenter"
+  version          = "1.6.1"
+  wait             = false
 
   values = [
     <<-EOT
@@ -66,7 +53,6 @@ resource "helm_release" "karpenter" {
   ]
 
   depends_on = [
-    null_resource.update_kubeconfig,
     module.karpenter,
     data.aws_eks_cluster_auth.cluster,
   ]
@@ -109,7 +95,7 @@ EOF
   depends_on = [
     helm_release.karpenter,
     module.eks,
-    null_resource.update_kubeconfig,
+    data.external.update_kubeconfig,
     module.karpenter.node_iam_role_arn
   ]
 }
@@ -128,7 +114,7 @@ EOF
   depends_on = [
     helm_release.karpenter,
     module.eks,
-    null_resource.update_kubeconfig,
+    data.external.update_kubeconfig,
     null_resource.apply_ec2_node_class
   ]
 }
