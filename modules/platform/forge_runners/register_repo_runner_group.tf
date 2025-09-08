@@ -5,16 +5,13 @@ module "register_github_app_runner_group_lambda" {
   function_name = "${var.deployment_config.prefix}-register-github-app-runner-group"
   handler       = "github_app_runner_group.lambda_handler"
   runtime       = "python3.11"
-  timeout       = 120
+  timeout       = 900
   architectures = ["x86_64"]
 
   source_path = [{
     path             = "${path.module}/lambda"
     pip_requirements = "${path.module}/lambda/requirements.txt"
   }]
-  build_in_docker  = true
-  docker_image     = "public.ecr.aws/lambda/python:3.11"
-  docker_pip_cache = false
 
   logging_log_group                 = aws_cloudwatch_log_group.register_github_app_runner_group_lambda.name
   use_existing_cloudwatch_log_group = true
@@ -23,6 +20,7 @@ module "register_github_app_runner_group_lambda" {
     GITHUB_API                  = local.github_api
     ORGANIZATION                = var.ghes_org
     RUNNER_GROUP_NAME           = var.runner_group_name
+    REPOSITORY_SELECTION        = var.repository_selection
     SECRET_NAME_APP_ID          = "${local.cicd_secrets_prefix}github_actions_runners_app_id"
     SECRET_NAME_PRIVATE_KEY     = "${local.cicd_secrets_prefix}github_actions_runners_app_key"
     SECRET_NAME_INSTALLATION_ID = "${local.cicd_secrets_prefix}github_actions_runners_app_installation_id"
