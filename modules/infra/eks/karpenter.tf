@@ -41,7 +41,7 @@ resource "helm_release" "karpenter" {
       name: ${module.karpenter.service_account}
     dnsPolicy: Default
     settings:
-      clusterName: ${module.eks.cluster_name}
+      clusterName: ${data.aws_eks_cluster_auth.cluster.id}
       clusterEndpoint: ${module.eks.cluster_endpoint}
       interruptionQueue: ${module.karpenter.queue_name}
     tolerations:
@@ -53,11 +53,6 @@ resource "helm_release" "karpenter" {
     webhook:
       enabled: false
     EOT
-  ]
-
-  depends_on = [
-    module.karpenter,
-    data.aws_eks_cluster_auth.cluster,
   ]
 }
 
@@ -81,9 +76,9 @@ locals {
 resource "null_resource" "apply_ec2_node_class" {
   provisioner "local-exec" {
     command = <<EOF
-kubectl --context ${var.cluster_name}-${var.aws_profile}-${var.aws_region} patch ec2nodeclass karpenter --type='merge' -p '{"metadata":{"finalizers":[]}}' || true
-kubectl --context ${var.cluster_name}-${var.aws_profile}-${var.aws_region} delete ec2nodeclass karpenter || true
-echo "${local.ec2_node_class_manifest}" | kubectl --context ${var.cluster_name}-${var.aws_profile}-${var.aws_region} apply -f -
+kubectl --context ${data.external.update_kubeconfig.result.kubeconfig_alias} patch ec2nodeclass karpenter --type='merge' -p '{"metadata":{"finalizers":[]}}' || true
+kubectl --context ${data.external.update_kubeconfig.result.kubeconfig_alias} delete ec2nodeclass karpenter || true
+echo "${local.ec2_node_class_manifest}" | kubectl --context ${data.external.update_kubeconfig.result.kubeconfig_alias} apply -f -
 EOF
   }
 
@@ -97,16 +92,13 @@ EOF
 
   depends_on = [
     helm_release.karpenter,
-    module.eks,
-    data.external.update_kubeconfig,
-    module.karpenter.node_iam_role_arn
   ]
 }
 
 resource "null_resource" "apply_node_pool" {
   provisioner "local-exec" {
     command = <<EOF
-echo "${local.node_pool_manifest}" | kubectl --context ${var.cluster_name}-${var.aws_profile}-${var.aws_region} apply -f -
+echo "${local.node_pool_manifest}" | kubectl --context ${data.external.update_kubeconfig.result.kubeconfig_alias} apply -f -
 EOF
   }
 
@@ -115,9 +107,6 @@ EOF
   }
 
   depends_on = [
-    helm_release.karpenter,
-    module.eks,
-    data.external.update_kubeconfig,
     null_resource.apply_ec2_node_class
   ]
 }
