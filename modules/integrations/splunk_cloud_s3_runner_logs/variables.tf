@@ -8,15 +8,6 @@ variable "aws_region" {
   description = "Default AWS region."
 }
 
-variable "splunk_aws_billing_config" {
-  type = object({
-    splunk_hec_url     = string
-    splunk_index       = string
-    splunk_metrics_url = string
-  })
-  description = "Configuration object for Splunk AWS billing integration."
-}
-
 variable "tags" {
   type        = map(string)
   description = "A map of tags to apply to resources."
@@ -37,4 +28,9 @@ variable "log_level" {
   type        = string
   description = "Log level for application logging (e.g., INFO, DEBUG, WARN, ERROR)"
   default     = "INFO"
+}
+
+variable "splunk_hec_endpoint" {
+  description = "Full URL of Splunk HEC endpoint"
+  type        = string
 }

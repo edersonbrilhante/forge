@@ -35,6 +35,7 @@ module "job_log_archiver" {
     SECRET_NAME_INSTALLATION_ID = local.secrets["github_actions_runners_app_installation_id"].name
     BUCKET_NAME                 = aws_s3_bucket.gh_logs.id
     KMS_KEY_ARN                 = aws_kms_key.gh_logs.arn
+    LOG_LEVEL                   = var.log_level
   }
 
   attach_policy_json = true
@@ -57,7 +58,9 @@ data "aws_iam_policy_document" "job_log_archiver" {
       "s3:AbortMultipartUpload",
       "s3:ListMultipartUploadParts",
       "s3:ListBucket",
-      "s3:GetObject"
+      "s3:GetObject",
+      "s3:PutObjectTagging",
+      "s3:GetObjectTagging"
     ]
     resources = [
       "arn:aws:s3:::${aws_s3_bucket.gh_logs.id}",
