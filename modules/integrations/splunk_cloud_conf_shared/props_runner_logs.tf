@@ -1,12 +1,10 @@
-resource "splunk_configs_conf" "forgecicd_cloudwatchlogs_forgecicd" {
-  name = "props/aws:cloudwatchlogs:forgecicd"
+resource "splunk_configs_conf" "forgecicd_runner_logs_json" {
+  name = "props/forgecicd:runner-logs:json"
 
   variables = {
-    "REPORT-forgecicd_cloudwatchlogs_runner_tenant_fields"          = "forgecicd_cloudwatchlogs_runner_tenant_fields"
-    "REPORT-forgecicd_cloudwatchlogs_extract_log_time_message"      = "forgecicd_cloudwatchlogs_extract_log_time_message"
-    "REPORT-forgecicd_cloudwatchlogs_runner_pages_github_repo_name" = "forgecicd_cloudwatchlogs_runner_pages_github_repo_name"
-    "REPORT-forgecicd_cloudwatchlogs_runner_ci_result"              = "forgecicd_cloudwatchlogs_runner_ci_result"
-    "REPORT-forgecicd_cloudwatchlogs_runner_gh_runner_version"      = "forgecicd_cloudwatchlogs_runner_gh_runner_version"
+    "REPORT-forgecicd_runner_logs_tenant_fields_event" = "forgecicd_runner_logs_tenant_fields_event"
+    "REPORT-forgecicd_runner_ec2"                      = "forgecicd_runner_ec2"
+    "REPORT-forgecicd_runner_arc"                      = "forgecicd_runner_arc"
   }
   acl {
     app     = var.splunk_conf.acl.app
@@ -61,27 +59,28 @@ resource "splunk_configs_conf" "forgecicd_cloudwatchlogs_forgecicd" {
     ]
   }
   depends_on = [
-    splunk_configs_conf.forgecicd_cloudwatchlogs_runner_tenant_fields,
-    splunk_configs_conf.forgecicd_cloudwatchlogs_extract_log_time_message,
-    splunk_configs_conf.forgecicd_cloudwatchlogs_runner_pages_github_repo_name,
-    splunk_configs_conf.forgecicd_cloudwatchlogs_runner_ci_result,
-    splunk_configs_conf.forgecicd_cloudwatchlogs_runner_gh_runner_version
+    splunk_configs_conf.forgecicd_runner_logs_tenant_fields_event,
+    splunk_configs_conf.forgecicd_runner_ec2,
+    splunk_configs_conf.forgecicd_runner_arc
   ]
 }
-
-resource "splunk_configs_conf" "forgecicd_metadata" {
-  name = "props/aws:metadata"
+resource "splunk_configs_conf" "forgecicd_runner_logs_logs" {
+  name = "props/forgecicd:runner-logs:logs"
 
   variables = {
-    "REPORT-forgecicd_metadata_tenant_fields" = "forgecicd_metadata_tenant_fields"
-    "REPORT-forgecicd_metadata_instance_id"   = "forgecicd_metadata_instance_id"
-    "REPORT-forgecicd_metadata_image_id"      = "forgecicd_metadata_image_id"
-    "REPORT-forgecicd_metadata_instance_type" = "forgecicd_metadata_instance_type"
+    "REPORT-forgecicd_runner_logs_tenant_fields_logs" = "forgecicd_runner_logs_tenant_fields_logs"
+    "REPORT-forgecicd_runner_ec2"                     = "forgecicd_runner_ec2"
+    "REPORT-forgecicd_runner_arc"                     = "forgecicd_runner_arc"
   }
-
+  acl {
+    app     = var.splunk_conf.acl.app
+    owner   = var.splunk_conf.acl.owner
+    sharing = var.splunk_conf.acl.sharing
+    read    = var.splunk_conf.acl.read
+    write   = var.splunk_conf.acl.write
+  }
   lifecycle {
     ignore_changes = [
-      acl,
       variables["ADD_EXTRA_TIME_FIELDS"],
       variables["ANNOTATE_PUNCT"],
       variables["AUTO_KV_JSON"],
@@ -126,9 +125,8 @@ resource "splunk_configs_conf" "forgecicd_metadata" {
     ]
   }
   depends_on = [
-    splunk_configs_conf.forgecicd_metadata_tenant_fields,
-    splunk_configs_conf.forgecicd_metadata_instance_id,
-    splunk_configs_conf.forgecicd_metadata_image_id,
-    splunk_configs_conf.forgecicd_metadata_instance_type
+    splunk_configs_conf.forgecicd_runner_logs_tenant_fields_logs,
+    splunk_configs_conf.forgecicd_runner_ec2,
+    splunk_configs_conf.forgecicd_runner_arc
   ]
 }
