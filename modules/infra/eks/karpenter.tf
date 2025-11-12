@@ -5,18 +5,13 @@ module "karpenter" {
   namespace    = "karpenter"
   cluster_name = var.cluster_name
 
-  create_node_iam_role    = true
   create_instance_profile = true
-  create_access_entry     = true
 
   tags = merge(local.all_security_tags, { "calico_dependency" = local._wait_for_calico })
 
   node_iam_role_additional_policies = {
     AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
   }
-
-  create_pod_identity_association = true
-
 }
 
 resource "helm_release" "karpenter" {
@@ -25,7 +20,7 @@ resource "helm_release" "karpenter" {
   create_namespace = true
   repository       = "oci://public.ecr.aws/karpenter"
   chart            = "karpenter"
-  version          = "1.6.1"
+  version          = "1.8.2"
   wait             = false
 
   values = [
