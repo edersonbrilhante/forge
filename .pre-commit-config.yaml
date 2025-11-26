@@ -196,7 +196,7 @@ repos:
   # JSON Schema Hooks
   # ---------------------
   - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: 0.33.3
+    rev: 0.35.0
     hooks:
       - id: check-github-workflows
         name: JSON Schema · GitHub workflows
