@@ -271,6 +271,7 @@ repos:
       - id: ansible-lint
         name: Ansible · Linter
         always_run: true
+        language_version: python3.12
 
   # ---------------------
   # Markdown Hooks
