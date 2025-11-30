@@ -30,6 +30,15 @@
       "matchStrings": ["required_version\\s=\\s\">= (?<currentValue>.*?)\""],
       "depNameTemplate": "opentofu/opentofu",
       "datasourceTemplate": "github-releases"
+    },
+    {
+      "fileMatch": ["^.*\\.tf$"],
+      "matchStrings": [
+        "download_lambdas\\.sh\"\\s*,\\s*\"[^\"]+\"\\s*,\\s*\"(?<currentValue>v\\d+\\.\\d+\\.\\d+)\""
+      ],
+      "matchPackageNames": ["github-aws-runners/terraform-aws-github-runner"],
+      "groupName": "terraform-aws-github-runner version",
+      "datasourceTemplate": "github-tags"
     }
   ],
 
@@ -118,18 +127,6 @@
       "automerge": true,
       "automergeType": "pr",
       "addLabels": ["security", "auto-merge"]
-    }
-  ],
-
-  "regexManagers": [
-    {
-      "fileMatch": ["^.*\\.tf$"],
-      "matchStrings": [
-        "download_lambdas\\.sh\"\\s*,\\s*\"[^\"]+\"\\s*,\\s*\"v(?<currentValue>\\d+\\.\\d+\\.\\d+)\""
-      ],
-      "datasourceTemplate": "github-tags",
-      "depNameTemplate": "github-aws-runners/terraform-aws-github-runner",
-      "versioningTemplate": "semver"
     }
   ]
 }
