@@ -69,6 +69,19 @@ variable "dashboard_variables" {
         }
       ))
     })
+    sqs_performance = object({
+      tenant_names = list(string)
+      dynamic_variables = list(object({
+        property               = string
+        alias                  = string
+        description            = string
+        values                 = list(string)
+        value_required         = bool
+        values_suggested       = list(string)
+        restricted_suggestions = bool
+        }
+      ))
+    })
   })
   description = "Variables for Dashboards"
 }
