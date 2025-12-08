@@ -1,12 +1,13 @@
 data "aws_iam_role" "forge" {
-  for_each = toset(var.forge_iam_roles)
+  count = var.number_forge_iram_roles
 
-  name = replace(each.value, "/^.*//", "")
+  name = regex("([^/]+)$", var.forge_iam_roles[count.index])[0]
 
   depends_on = [module.forge_trust_validator_lambda]
 }
 
 locals {
+
   # Statement we want to add to EVERY forge IAM role
   lambda_trust_statement = {
     Sid    = "AllowLambdaValidationAssume"
@@ -19,8 +20,8 @@ locals {
 
   # original_trust[arn] = decoded assume_role_policy JSON for each role
   original_trust = {
-    for arn, role in data.aws_iam_role.forge :
-    arn => jsondecode(role.assume_role_policy)
+    for idx, role in data.aws_iam_role.forge :
+    var.forge_iam_roles[idx] => jsondecode(role.assume_role_policy)
   }
 
   # original_statements[arn] = existing Statements list (or [])
@@ -63,12 +64,12 @@ locals {
 }
 
 resource "null_resource" "update_forge_role_trust" {
-  for_each = data.aws_iam_role.forge
+  count = var.number_forge_iram_roles
 
   triggers = {
-    role_name    = each.value.name
-    original_sha = sha1(local.original_statements_trust_json[each.key])
-    future_sha   = sha1(local.concatenated_trust_json[each.key])
+    role_name       = data.aws_iam_role.forge[count.index].id
+    original_policy = jsonencode(local.original_statements_trust_json[var.forge_iam_roles[count.index]])
+    future_policy   = jsonencode(local.concatenated_trust_json[var.forge_iam_roles[count.index]])
   }
 
   provisioner "local-exec" {
@@ -110,11 +111,11 @@ resource "null_resource" "update_forge_role_trust" {
         done
       }
 
-      ROLE_NAME="${each.value.name}"
-      TMP_FILE="/tmp/${each.value.name}-trust.json"
+      ROLE_NAME="${data.aws_iam_role.forge[count.index].name}"
+      TMP_FILE="/tmp/${data.aws_iam_role.forge[count.index].name}-trust.json"
 
       cat > "$${TMP_FILE}" << 'JSON'
-${local.concatenated_trust_json[each.key]}
+${local.concatenated_trust_json[var.forge_iam_roles[count.index]]}
 JSON
 
       retry_with_backoff
