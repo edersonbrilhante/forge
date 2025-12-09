@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y \
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # renovate: datasource=github-releases depName=gitleaks/gitleaks registryUrl=https://github.com/
-ARG GITLEAKS_VERSION="8.24.3"
+ARG GITLEAKS_VERSION="8.30.0"
 ARG GITLEAKS_SRC="https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
 ARG GITLEAKS_ARTIFACT="gitleaks.tar.gz"
 RUN set -eux; \
