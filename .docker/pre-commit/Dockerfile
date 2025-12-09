@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y \
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # renovate: datasource=github-releases depName=gitleaks/gitleaks registryUrl=https://github.com/
-ARG GITLEAKS_VERSION="8.24.3"
+ARG GITLEAKS_VERSION="8.30.0"
 ARG GITLEAKS_SRC="https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
 ARG GITLEAKS_ARTIFACT="gitleaks.tar.gz"
 RUN set -eux; \
@@ -21,7 +21,7 @@ RUN set -eux; \
     chmod 755 /usr/local/bin/gitleaks
 
 # renovate: datasource=github-releases depName=hadolint/hadolint registryUrl=https://github.com/
-ARG HADOLINT_VERSION="2.12.0"
+ARG HADOLINT_VERSION="2.14.0"
 ARG HADOLINT_SRC="https://github.com/hadolint/hadolint/releases/download/v${HADOLINT_VERSION}/hadolint-Linux-x86_64"
 ARG HADOLINT_ARTIFACT="hadolint"
 RUN set -eux; \
@@ -40,7 +40,7 @@ RUN set -eux; \
     chmod 755 /usr/local/bin/jq
 
 # renovate: datasource=github-releases depName=hashicorp/packer registryUrl=https://github.com/
-ARG PACKER_VERSION="1.12.0"
+ARG PACKER_VERSION="1.14.3"
 ARG PACKER_SRC="https://releases.hashicorp.com/packer/${PACKER_VERSION}/packer_${PACKER_VERSION}_linux_amd64.zip"
 ARG PACKER_ARTIFACT="packer.zip"
 RUN set -eux; \
@@ -50,7 +50,7 @@ RUN set -eux; \
     rm ${PACKER_ARTIFACT}
 
 # renovate: datasource=github-releases depName=koalaman/shellcheck registryUrl=https://github.com/
-ARG SHELLCHECK_VERSION="0.10.0"
+ARG SHELLCHECK_VERSION="0.11.0"
 ARG SHELLCHECK_SRC="https://github.com/koalaman/shellcheck/releases/download/v${SHELLCHECK_VERSION}/shellcheck-v${SHELLCHECK_VERSION}.linux.x86_64.tar.xz"
 ARG SHELLCHECK_ARTIFACT="shellcheck.tar.xz"
 RUN set -eux; \
@@ -60,7 +60,7 @@ RUN set -eux; \
     chmod 755 /usr/local/bin/shellcheck
 
 # renovate: datasource=github-releases depName=mvdan/sh registryUrl=https://github.com/
-ARG SHFMT_VERSION="3.11.0"
+ARG SHFMT_VERSION="3.12.0"
 ARG SHFMT_SRC="https://github.com/mvdan/sh/releases/download/v${SHFMT_VERSION}/shfmt_v${SHFMT_VERSION}_linux_amd64"
 ARG SHFMT_ARTIFACT="shfmt"
 RUN set -eux; \
@@ -78,7 +78,7 @@ RUN set -eux; \
     chmod 755 /usr/local/bin/terraform-docs
 
 # renovate: datasource=github-releases depName=gruntwork-io/terragrunt registryUrl=https://github.com/
-ARG TERRAGRUNT_VERSION="0.93.11"
+ARG TERRAGRUNT_VERSION="0.94.0"
 ARG TERRAGRUNT_SRC="https://github.com/gruntwork-io/terragrunt/releases/download/v${TERRAGRUNT_VERSION}/terragrunt_linux_amd64"
 ARG TERRAGRUNT_ARTIFACT="terragrunt"
 RUN set -eux; \
