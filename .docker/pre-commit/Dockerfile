@@ -50,7 +50,7 @@ RUN set -eux; \
     rm ${PACKER_ARTIFACT}
 
 # renovate: datasource=github-releases depName=koalaman/shellcheck registryUrl=https://github.com/
-ARG SHELLCHECK_VERSION="0.10.0"
+ARG SHELLCHECK_VERSION="0.11.0"
 ARG SHELLCHECK_SRC="https://github.com/koalaman/shellcheck/releases/download/v${SHELLCHECK_VERSION}/shellcheck-v${SHELLCHECK_VERSION}.linux.x86_64.tar.xz"
 ARG SHELLCHECK_ARTIFACT="shellcheck.tar.xz"
 RUN set -eux; \
