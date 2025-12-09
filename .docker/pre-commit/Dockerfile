@@ -60,7 +60,7 @@ RUN set -eux; \
     chmod 755 /usr/local/bin/shellcheck
 
 # renovate: datasource=github-releases depName=mvdan/sh registryUrl=https://github.com/
-ARG SHFMT_VERSION="3.11.0"
+ARG SHFMT_VERSION="3.12.0"
 ARG SHFMT_SRC="https://github.com/mvdan/sh/releases/download/v${SHFMT_VERSION}/shfmt_v${SHFMT_VERSION}_linux_amd64"
 ARG SHFMT_ARTIFACT="shfmt"
 RUN set -eux; \
