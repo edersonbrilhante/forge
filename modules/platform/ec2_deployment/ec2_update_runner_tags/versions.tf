@@ -7,5 +7,5 @@ terraform {
   }
 
   # OpenTofu version.
-  required_version = ">= 1.10"
+  required_version = ">= v1.11.0"
 }
