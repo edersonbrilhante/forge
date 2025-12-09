@@ -21,7 +21,7 @@ RUN set -eux; \
     chmod 755 /usr/local/bin/gitleaks
 
 # renovate: datasource=github-releases depName=hadolint/hadolint registryUrl=https://github.com/
-ARG HADOLINT_VERSION="2.12.0"
+ARG HADOLINT_VERSION="2.14.0"
 ARG HADOLINT_SRC="https://github.com/hadolint/hadolint/releases/download/v${HADOLINT_VERSION}/hadolint-Linux-x86_64"
 ARG HADOLINT_ARTIFACT="hadolint"
 RUN set -eux; \
