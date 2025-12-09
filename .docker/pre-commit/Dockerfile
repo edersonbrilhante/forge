@@ -24,7 +24,7 @@ RUN set -eux; \
 
 # renovate: datasource=github-releases depName=hadolint/hadolint registryUrl=https://github.com/
 ARG HADOLINT_VERSION="v2.12.0"
-ARG HADOLINT_CHECKSUM="56de6d5e5ec427e17b74fa48d51271c7fc0d61244bf5c90e828aab8362d55010"
+ARG HADOLINT_CHECKSUM="b3555ba9c2bfd9401e79f2f0da68dd1ae38e10c7"
 ARG HADOLINT_SRC="https://github.com/hadolint/hadolint/releases/download/v2.12.0/hadolint-Linux-x86_64"
 ARG HADOLINT_ARTIFACT="hadolint"
 RUN set -eux; \
