@@ -29,7 +29,9 @@
       "fileMatch": ["^*\\.tf$"],
       "matchStrings": ["required_version\\s=\\s\">= (?<currentValue>.*?)\""],
       "depNameTemplate": "opentofu/opentofu",
-      "datasourceTemplate": "github-releases"
+      "datasourceTemplate": "github-releases",
+      "extractVersion": "^v?(?<version>.*)$",
+      "versioningTemplate": "semver"
     },
     {
       "customType": "regex",
@@ -40,6 +42,13 @@
       "depNameTemplate": "github-aws-runners/terraform-aws-github-runner",
       "datasourceTemplate": "github-tags",
       "versioningTemplate": "semver-coerced"
+    },
+    {
+      "customType": "regex",
+      "fileMatch": ["Dockerfile$"],
+      "matchStrings": ["# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+) registryUrl=(?<registryUrl>\\S+)( extractVersion=(?<extractVersion>.+?))?( versioning=(?<versioning>.*?))?\\n.*?VERSION=\"(?<currentValue>.*)?\"\\n.*?CHECKSUM=\"(?<currentDigest>.*)?\"\\s"],
+      "versioningTemplate": "{{#if versioning}}{{{versioning}}}{{else}}semver{{/if}}",
+      "extractVersion": "^v?(?<version>.*)$"
     }
   ],
 
