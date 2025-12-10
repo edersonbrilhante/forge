@@ -31,7 +31,7 @@ RUN set -eux; \
 
 # Download jq.
 # renovate: datasource=github-releases depName=jqlang/jq registryUrl=https://github.com/ extractVersion=^jq-(?<version>.*)$
-ARG JQ_VERSION="1.7.1"
+ARG JQ_VERSION="1.8.1"
 ARG JQ_SRC="https://github.com/jqlang/jq/releases/download/jq-${JQ_VERSION}/jq-linux64"
 ARG JQ_ARTIFACT="jq"
 RUN set -eux; \
