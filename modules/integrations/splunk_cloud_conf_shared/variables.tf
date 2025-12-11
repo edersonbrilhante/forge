@@ -1,6 +1,6 @@
 variable "aws_profile" {
   type        = string
-  description = "AWS profile (i.e. generated via 'sl aws session generate') to use."
+  description = "AWS profile to use."
 }
 
 variable "aws_region" {
@@ -23,6 +23,7 @@ variable "splunk_conf" {
       read    = list(string)
       write   = list(string)
     })
-    index = string
+    index        = string
+    tenant_names = list(string)
   })
 }

@@ -15,7 +15,7 @@ LOG = logging.getLogger()
 level_str = os.environ.get('LOG_LEVEL', 'INFO').upper()
 LOG.setLevel(getattr(logging, level_str, logging.INFO))
 
-SECRETS = boto3.client('secretsmanager')
+SSM = boto3.client('ssm')
 S3 = boto3.client('s3')
 
 MAX_S3_TAGS = 10
@@ -23,11 +23,9 @@ GITHUB_RETRY_ATTEMPTS = 3
 GITHUB_RETRY_DELAY = 2
 
 
-def _get_secret_value(secret_id: str) -> str:
-    resp = SECRETS.get_secret_value(SecretId=secret_id)
-    if 'SecretString' in resp:
-        return resp['SecretString']
-    return base64.b64decode(resp['SecretBinary']).decode()
+def _get_secret_value(parameter_name: str) -> str:
+    resp = SSM.get_parameter(Name=parameter_name, WithDecryption=True)
+    return resp['Parameter']['Value']
 
 
 def _generate_jwt(app_id: str, private_key_pem: str) -> str:
@@ -157,63 +155,81 @@ def _tags(wf: Dict[str, Any]) -> Dict[str, str]:
 
 
 def lambda_handler(event: Dict[str, Any], _context: Any) -> Dict[str, Any]:  # pragma: no cover
-    LOG.debug('Event: %s', json.dumps(event))
     try:
-        gh_event, workflow_job = _parse_event(event)
-    except ValueError:
-        LOG.error('Invalid JSON in SQS body')
-        return {'status': 'error', 'error': 'invalid_json'}
+        LOG.debug('Event: %s', json.dumps(event))
+        try:
+            gh_event, workflow_job = _parse_event(event)
+        except Exception as e:
+            raise ValueError('invalid_json Error: %s', str(e))
 
-    detail = gh_event.get('detail', {})
-    if detail.get('action') != 'completed' or not workflow_job:
-        return {'status': 'ignored'}
+        detail = gh_event.get('detail', {})
+        if detail.get('action') != 'completed' or not workflow_job:
+            LOG.info(
+                'Event action is not completed or workflow_job is missing, ignoring.')
+            return {'status': 'ignored'}
 
-    repo_full_name = (detail.get('repository') or {}).get('full_name')
-    if not repo_full_name:
-        return {'status': 'error', 'error': 'missing_repository'}
+        conclusion = workflow_job.get('conclusion')
 
-    try:
-        env = _get_env()
-    except RuntimeError as e:
-        LOG.error(str(e))
-        return {'status': 'error', 'error': 'missing_env'}
+        if conclusion in ('skipped', 'cancelled'):
+            LOG.info(
+                'Job conclusion is %s, skipping log archival. Workflow job: %s',
+                conclusion,
+                workflow_job,
+            )
+            return {'status': 'ignored'}
 
-    owner, repo = repo_full_name.split('/', 1)
-    job_id = workflow_job.get('id')
-    run_id = workflow_job.get('run_id')
-    runner_name = workflow_job.get('runner_name')
-    run_attempt = workflow_job.get('run_attempt')
-    workflow_name = workflow_job.get('workflow_name')
+        repo_full_name = (detail.get('repository') or {}).get('full_name')
+        if not repo_full_name:
+            LOG.info(
+                'Missing repository full_name in event detail. Detail event: %s', detail)
+            raise ValueError('missing_repository')
 
-    if not all([runner_name, run_id, job_id]):
-        return {'status': 'error', 'error': 'missing_ids'}
+        try:
+            env = _get_env()
+        except Exception as e:
+            raise ValueError('missing_env. Error: %s', str(e))
 
-    try:
-        install_token = _github_auth(
-            env['SECRET_NAME_APP_ID'], env['SECRET_NAME_PRIVATE_KEY'], env['SECRET_NAME_INSTALLATION_ID'], env['GITHUB_API']
-        )
-        _, log_key, event_key = _keys(
-            repo_full_name, run_id, run_attempt, job_id)
-        obj_tags = _tags(workflow_job)
-        body = _download_job_logs(owner, repo, int(
-            job_id), install_token, env['GITHUB_API'])
-        _put_log_object(env['BUCKET_NAME'], log_key, body,
-                        env['KMS_KEY_ARN'], obj_tags)
-        size = len(body)
-        _put_json_object(env['BUCKET_NAME'], event_key,
-                         detail, env['KMS_KEY_ARN'], obj_tags)
+        owner, repo = repo_full_name.split('/', 1)
+        job_id = workflow_job.get('id')
+        run_id = workflow_job.get('run_id')
+        runner_name = workflow_job.get('runner_name')
+        run_attempt = workflow_job.get('run_attempt')
+        workflow_name = workflow_job.get('workflow_name')
 
-        return {
-            'status': 'ok',
-            'job_id': job_id,
-            'run_id': run_id,
-            'run_attempt': run_attempt,
-            'workflow_name': workflow_name,
-            'repository': repo_full_name,
-            'log_key': log_key,
-            'event_key': event_key,
-            'size': size
-        }
-    except Exception:
-        LOG.exception('archive_failed job_id=%s run_id=%s', job_id, run_id)
-        return {'status': 'error', 'job_id': job_id, 'run_id': run_id, 'error': 'see logs'}
+        if not all([runner_name, run_id, job_id]):
+            LOG.info('Missing required IDs: runner_name=%s run_id=%s job_id=%s. Workflow job: %s',
+                     runner_name, run_id, job_id, workflow_job)
+            raise ValueError('missing_ids')
+
+        try:
+            install_token = _github_auth(
+                env['SECRET_NAME_APP_ID'], env['SECRET_NAME_PRIVATE_KEY'], env['SECRET_NAME_INSTALLATION_ID'], env['GITHUB_API']
+            )
+            _, log_key, event_key = _keys(
+                repo_full_name, run_id, run_attempt, job_id)
+            obj_tags = _tags(workflow_job)
+            body = _download_job_logs(owner, repo, int(
+                job_id), install_token, env['GITHUB_API'])
+            _put_log_object(env['BUCKET_NAME'], log_key, body,
+                            env['KMS_KEY_ARN'], obj_tags)
+            size = len(body)
+            _put_json_object(env['BUCKET_NAME'], event_key,
+                             detail, env['KMS_KEY_ARN'], obj_tags)
+
+            return {
+                'status': 'ok',
+                'job_id': job_id,
+                'run_id': run_id,
+                'run_attempt': run_attempt,
+                'workflow_name': workflow_name,
+                'repository': repo_full_name,
+                'log_key': log_key,
+                'event_key': event_key,
+                'size': size
+            }
+        except Exception as e:
+            raise ValueError(
+                'archiver_error: job_id=%s run_id=%s. Error: %s', job_id, run_id, str(e))
+    except Exception as e:
+        LOG.exception(
+            'Unhandled exception in job_log_archiver lambda. Error: %s', str(e))
