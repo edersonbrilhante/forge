@@ -20,6 +20,8 @@ LOG = logging.getLogger()
 level_str = os.environ.get('LOG_LEVEL', 'INFO').upper()
 LOG.setLevel(getattr(logging, level_str, logging.INFO))
 
+SSM = boto3.client('ssm')
+
 
 def generate_jwt(app_id: str, private_key: str) -> str:
     """Generate a JWT for GitHub App authentication."""
@@ -144,11 +146,10 @@ def save_to_runner_group(access_token: str, github_api: str, organization: str, 
                 f"Added repository {repo['full_name']} to runner group {runner_group_name}.")
 
 
-def get_secret(secret_name: str) -> Dict[str, Any]:
-    """Retrieve secrets from AWS Secrets Manager."""
-    client = boto3.client('secretsmanager')
-    response = client.get_secret_value(SecretId=secret_name)
-    return response['SecretString']
+def get_secret(secret_name: str) -> str:
+    """Retrieve secrets from AWS Systems Manager Parameter Store."""
+    response = SSM.get_parameter(Name=secret_name, WithDecryption=True)
+    return response['Parameter']['Value']
 
 
 def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
@@ -192,8 +193,6 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'body': json.dumps({'message': 'Repositories added to runner group successfully.'})
         }
     except Exception as e:
-        LOG.error(f'Error: {str(e)}')
-        return {
-            'statusCode': 500,
-            'body': json.dumps({'message': 'An error occurred', 'error': str(e)})
-        }
+        LOG.exception(
+            f'Unhandled exception in github_app_runner_group lambda. Error: {str(e)}')
+        raise
