@@ -69,7 +69,7 @@ RUN set -eux; \
     chmod 755 /usr/local/bin/shfmt
 
 # renovate: datasource=github-releases depName=terraform-docs/terraform-docs registryUrl=https://github.com/
-ARG TERRAFORM_DOCS_VERSION="0.20.0"
+ARG TERRAFORM_DOCS_VERSION="0.21.0"
 ARG TERRAFORM_DOCS_SRC="https://github.com/terraform-docs/terraform-docs/releases/download/v${TERRAFORM_DOCS_VERSION}/terraform-docs-v${TERRAFORM_DOCS_VERSION}-linux-amd64.tar.gz"
 ARG TERRAFORM_DOCS_ARTIFACT="terraform-docs.tar.gz"
 RUN set -eux; \
