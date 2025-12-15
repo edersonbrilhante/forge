@@ -14,34 +14,74 @@ module "karpenter" {
   }
 }
 
-resource "helm_release" "karpenter" {
-  name             = "karpenter"
-  namespace        = "karpenter"
-  create_namespace = true
-  repository       = "oci://public.ecr.aws/karpenter"
-  chart            = "karpenter"
-  version          = "1.8.3"
-  wait             = false
+resource "null_resource" "karpenter" {
+  depends_on = [module.eks]
 
-  values = [
-    <<-EOT
-    serviceAccount:
-      name: ${module.karpenter.service_account}
-    dnsPolicy: Default
-    settings:
-      clusterName: ${module.eks.cluster_name}
-      clusterEndpoint: ${module.eks.cluster_endpoint}
-      interruptionQueue: ${module.karpenter.queue_name}
-    tolerations:
-      - key: CriticalAddonsOnly
-        operator: Exists
-      - key: karpenter.sh/controller
-        operator: Exists
-        effect: NoSchedule
-    webhook:
-      enabled: false
-    EOT
-  ]
+  triggers = {
+    chart_version      = "1.8.3"
+    service_account    = module.karpenter.service_account
+    cluster_name       = module.eks.cluster_name
+    cluster_endpoint   = module.eks.cluster_endpoint
+    interruption_queue = module.karpenter.queue_name
+    kube_context       = "${var.cluster_name}-${var.aws_profile}-${var.aws_region}"
+  }
+
+  # --- CREATE / UPDATE ---
+  provisioner "local-exec" {
+    interpreter = ["/bin/bash", "-c"]
+    command     = <<EOF
+set -euxo pipefail
+
+echo "PATH=$PATH"
+command -v helm || { echo "helm not found"; exit 1; }
+command -v kubectl || { echo "kubectl not found"; exit 1; }
+
+# Ensure namespace exists
+kubectl --context ${self.triggers.kube_context}  apply -f - <<EOF2
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: karpenter
+EOF2
+
+helm --kube-context ${self.triggers.kube_context} upgrade \
+  --install karpenter oci://public.ecr.aws/karpenter/karpenter \
+  --namespace karpenter \
+  --version ${self.triggers.chart_version} \
+  --set serviceAccount.name=${self.triggers.service_account} \
+  --set dnsPolicy=Default \
+  --set settings.clusterName=${self.triggers.cluster_name} \
+  --set settings.clusterEndpoint=${self.triggers.cluster_endpoint} \
+  --set settings.interruptionQueue=${self.triggers.interruption_queue} \
+  --set 'tolerations[0].key'=CriticalAddonsOnly \
+  --set 'tolerations[0].operator'=Exists \
+  --set 'tolerations[1].key'=karpenter.sh/controller \
+  --set 'tolerations[1].operator'=Exists \
+  --set 'tolerations[1].effect'=NoSchedule \
+  --set webhook.enabled=false
+EOF
+  }
+
+  # --- DESTROY ---
+  provisioner "local-exec" {
+    when        = destroy
+    interpreter = ["/bin/bash", "-c"]
+    command     = <<EOF
+set -euxo pipefail
+
+echo "PATH=$PATH"
+command -v helm || { echo "helm not found"; exit 1; }
+command -v kubectl || { echo "kubectl not found"; exit 1; }
+
+echo "Uninstalling Karpenter..."
+
+# Try uninstall, but don't fail destroy if already gone
+helm --kube-context ${self.triggers.kube_context} uninstall karpenter -n karpenter || true
+
+# Optionally cleanup namespace (safe only if nothing else is inside)
+kubectl --context ${self.triggers.kube_context} delete namespace karpenter --ignore-not-found=true
+EOF
+  }
 }
 
 locals {
@@ -79,7 +119,7 @@ EOF
   }
 
   depends_on = [
-    helm_release.karpenter,
+    null_resource.karpenter,
   ]
 }
 
