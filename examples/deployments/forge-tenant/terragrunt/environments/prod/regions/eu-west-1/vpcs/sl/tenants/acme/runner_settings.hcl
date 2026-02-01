@@ -18,6 +18,7 @@ include "vpc" {
 
 locals {
   # VPC & region info from includes
+  lambda_vpc_id     = include.vpc.locals.vpc_id
   lambda_subnet_ids = include.vpc.locals.lambda_subnet_ids
   vpc_id            = include.vpc.locals.vpc_id
   subnet_ids        = include.vpc.locals.subnet_ids
@@ -98,6 +99,7 @@ locals {
         volume_size           = spec.volume.size
         volume_type           = spec.volume.type
       }]
+      vpc_id      = local.vpc_id
       pool_config = spec.pool_config
     }
   }
