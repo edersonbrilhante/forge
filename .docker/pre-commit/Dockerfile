@@ -1,4 +1,4 @@
-FROM ubuntu:24.04@sha256:c35e29c9450151419d9448b0fd75374fec4fff364a27f176fb458d472dfc9e54 AS build
+FROM ubuntu:24.04@sha256:cd1dba651b3080c3686ecf4e3c4220f026b521fb76978881737d24f200828b2b AS build
 
 WORKDIR /opt/build
 
@@ -78,7 +78,7 @@ RUN set -eux; \
     chmod 755 /usr/local/bin/terraform-docs
 
 # renovate: datasource=github-releases depName=gruntwork-io/terragrunt registryUrl=https://github.com/
-ARG TERRAGRUNT_VERSION="0.95.0"
+ARG TERRAGRUNT_VERSION="0.99.1"
 ARG TERRAGRUNT_SRC="https://github.com/gruntwork-io/terragrunt/releases/download/v${TERRAGRUNT_VERSION}/terragrunt_linux_amd64"
 ARG TERRAGRUNT_ARTIFACT="terragrunt"
 RUN set -eux; \
@@ -104,7 +104,7 @@ RUN set -eux; \
     unzip -o ${TOFU_ARTIFACT} -d /usr/local/bin/; \
     chmod 755 /usr/local/bin/tofu
 
-FROM ubuntu:24.04@sha256:c35e29c9450151419d9448b0fd75374fec4fff364a27f176fb458d472dfc9e54 AS final
+FROM ubuntu:24.04@sha256:cd1dba651b3080c3686ecf4e3c4220f026b521fb76978881737d24f200828b2b AS final
 
 ENV DEBIAN_FRONTEND=noninteractive
 
