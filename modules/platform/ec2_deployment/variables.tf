@@ -18,6 +18,7 @@ variable "runner_configs" {
     })
     runner_iam_role_managed_policy_arns = list(string)
     runner_group_name                   = string
+    scale_errors                        = optional(list(string), [])
     runner_specs = map(object({
       ami_filter = object({
         name  = list(string)
@@ -32,8 +33,19 @@ variable "runner_configs" {
       max_instances       = number
       min_run_time        = number
       instance_types      = list(string)
+      license_specifications = optional(list(object({
+        license_configuration_arn = string
+      })), null)
       placement = optional(object({
-        host_id = optional(string, null)
+        affinity                = optional(string)
+        availability_zone       = optional(string)
+        group_id                = optional(string)
+        group_name              = optional(string)
+        host_id                 = optional(string)
+        host_resource_group_arn = optional(string)
+        spread_domain           = optional(string)
+        tenancy                 = optional(string)
+        partition_number        = optional(number)
       }), null)
       pool_config = list(object({
         size                         = number
@@ -43,6 +55,8 @@ variable "runner_configs" {
       runner_user                   = string
       enable_userdata               = bool
       instance_target_capacity_type = string
+      vpc_id                        = optional(string, null)
+      subnet_ids                    = optional(list(string), null)
       block_device_mappings = list(object({
         delete_on_termination = bool
         device_name           = string

@@ -7,6 +7,9 @@ runnerGroup: "${runner_group_name}"
 runnerScaleSetName: "${scale_set_name}"
 
 template:
+  metadata:
+    annotations:
+      karpenter.sh/do-not-disrupt: "true"
   spec:
     serviceAccountName: ${service_account}
     automountServiceAccountToken: true
@@ -252,6 +255,7 @@ template:
                 audience: sts.amazonaws.com
 
     tolerations:
+      # tenant tolerations
       - key: "forge.local/scale_set_type"
         operator: "Equal"
         value: "dind"
@@ -266,6 +270,7 @@ template:
         requiredDuringSchedulingIgnoredDuringExecution:
           nodeSelectorTerms:
             - matchExpressions:
+                # tenant affinity
                 - key: forge.local/scale_set_type
                   operator: In
                   values:
@@ -274,6 +279,8 @@ template:
                   operator: In
                   values:
                     - ${tenant}
+                - key: "karpenter.sh/disrupted"
+                 operator: DoesNotExist
 
 controllerServiceAccount:
   namespace: ${controller_namespace}

@@ -2,7 +2,6 @@ locals {
   # Templatized userdata (cloud-init) file.
   user_data_prefix                   = "${path.module}/template_files"
   userdata_template_post_install     = "${local.user_data_prefix}/post_install.tftpl"
-  user_data_template_runner          = "${local.user_data_prefix}/user_data.tftpl"
   runner_template_hook_job_started   = "${local.user_data_prefix}/hook_job_started.tftpl"
   runner_template_hook_job_completed = "${local.user_data_prefix}/hook_job_completed.tftpl"
 
@@ -35,11 +34,12 @@ data "aws_subnet" "runner_subnet" {
 }
 
 data "external" "download_lambdas" {
-  program = ["bash", "${path.module}/scripts/download_lambdas.sh", "/tmp/${var.runner_configs.prefix}/", "v7.3.0"]
+  program = ["bash", "${path.module}/scripts/download_lambdas.sh", "/tmp/${var.runner_configs.prefix}/", "v7.4.0"]
 }
 
+
 module "runners" {
-  source = "git::https://github.com/github-aws-runners/terraform-aws-github-runner.git//modules/multi-runner?ref=v7.3.0"
+  source = "git::https://github.com/edersonbrilhante/terraform-aws-github-runner.git//modules/multi-runner?ref=feat-macos-support"
 
   aws_region = var.aws_region
 
@@ -58,8 +58,9 @@ module "runners" {
     enable = true
   }
 
-  lambda_tags = var.tenant_configs.tags
-  tags        = var.tenant_configs.tags
+  lambda_tags          = var.tenant_configs.tags
+  tags                 = var.tenant_configs.tags
+  parameter_store_tags = var.tenant_configs.tags
 
   # Verbose logging.
   log_level = var.runner_configs.log_level
@@ -116,7 +117,8 @@ module "runners" {
         runner_group_name               = var.runner_configs.runner_group_name
         enable_runner_binaries_syncer   = false
         enable_userdata                 = val["enable_userdata"]
-        userdata_template               = local.user_data_template_runner
+        scale_errors                    = var.runner_configs.scale_errors
+        userdata_template               = "${local.user_data_prefix}/user_data_${val["runner_os"]}.tftpl"
         userdata_pre_install            = "# No pre-install steps."
         userdata_post_install = templatefile(
           local.userdata_template_post_install,
@@ -130,33 +132,46 @@ module "runners" {
         enable_runner_detailed_monitoring = true
         runner_run_as                     = val["runner_user"]
         block_device_mappings             = val["block_device_mappings"]
+        license_specifications            = val["license_specifications"]
         placement                         = val["placement"]
-        runner_log_files = [
-          {
-            "log_group_name" : "forge-logs",
-            "prefix_log_group" : true,
-            "file_path" : "/var/log/syslog",
-            "log_stream_name" : "{instance_id}/syslog"
-          },
-          {
-            "log_group_name" : "forge-logs",
-            "prefix_log_group" : true,
-            "file_path" : "/var/log/user-data.log",
-            "log_stream_name" : "{instance_id}/user-data"
-          },
-          {
-            "log_group_name" : "forge-logs",
-            "prefix_log_group" : true,
-            "file_path" : "/opt/actions-runner/_diag/Runner_**.log",
-            "log_stream_name" : "{instance_id}/runner"
-          },
-          {
-            "log_group_name" : "forge-logs",
-            "prefix_log_group" : true,
-            "file_path" : "/home/${val["runner_user"]}/hook.log",
-            "log_stream_name" : "{instance_id}/hook"
-          },
-        ]
+        runner_log_files = concat(
+          // Linux/macOS-only logs
+          val["runner_os"] == "windows" ? [] : [
+            {
+              "log_group_name" : "forge-logs",
+              "prefix_log_group" : true,
+              "file_path" : "/var/log/syslog",
+              "log_stream_name" : "{instance_id}/syslog"
+            },
+            {
+              "log_group_name" : "forge-logs",
+              "prefix_log_group" : true,
+              "file_path" : "/home/${val["runner_user"]}/hook.log",
+              "log_stream_name" : "{instance_id}/hook"
+            },
+            {
+              "log_group_name" : "forge-logs",
+              "prefix_log_group" : true,
+              "file_path" : "/home/${val["runner_user"]}/hook.log",
+              "log_stream_name" : "{instance_id}/hook"
+            },
+          ],
+          // Logs that exist on all OSes, with OS-specific paths
+          [
+            {
+              "log_group_name" : "forge-logs",
+              "prefix_log_group" : true,
+              "file_path" : val["runner_os"] == "windows" ? "C:/UserData.log" : "/var/log/user-data.log",
+              "log_stream_name" : "{instance_id}/user-data"
+            },
+            {
+              "log_group_name" : "forge-logs",
+              "prefix_log_group" : true,
+              "file_path" : val["runner_os"] == "windows" ? "C:/actions-runner/_diag/Runner_*.log" : "/opt/actions-runner/_diag/Runner_**.log",
+              "log_stream_name" : "{instance_id}/runner"
+            },
+          ],
+        )
         ami = {
           owners      = val["ami_owners"]
           filter      = val["ami_filter"]
@@ -170,6 +185,8 @@ module "runners" {
             aws_iam_policy.ec2_tags.arn,
           ]
         )
+        vpc_id                          = val["vpc_id"]
+        subnet_ids                      = val["subnet_ids"]
         enable_ephemeral_runners        = true
         create_service_linked_role_spot = true
         enable_organization_runners     = true

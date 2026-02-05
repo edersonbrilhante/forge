@@ -1,0 +1,27 @@
+#!/bin/bash
+
+set +x
+%{ if enable_debug_logging }
+set -x
+%{ endif }
+
+# Just a dummy value (user-supplied string; does nothing).
+${pre_install}
+
+# Set defaults for macOS EC2 instances.
+# Default user on EC2 macOS AMIs is typically "ec2-user".
+user_name=ec2-user
+
+touch .env
+chmod 0644 .env
+
+grep -q "^PATH=" .env || echo "PATH=$PATH" >> .env
+
+# Configure CloudWatch logging agent if installed and configured for macOS.
+if command -v /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl >/dev/null 2>&1; then
+    /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -s -c ssm:${ssm_key_cloudwatch_agent_config} || true
+fi
+
+cd /opt/actions-runner
+
+${start_runner}

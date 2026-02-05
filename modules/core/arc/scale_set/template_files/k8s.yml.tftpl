@@ -22,7 +22,7 @@ containerMode:
 template:
   metadata:
     annotations:
-      karpenter.sh/do-not-evict: "true"
+      karpenter.sh/do-not-disrupt: "true"
   spec:
     securityContext:
       fsGroup: 123
@@ -135,6 +135,15 @@ template:
       - name: pod-hooks
         configMap:
           name: hook-pre-post-job-${scale_set_name}
+
+    affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+                # karpenter affinity
+                - key: "karpenter.sh/disrupted"
+                  operator: DoesNotExist
 
 controllerServiceAccount:
   namespace: ${controller_namespace}
