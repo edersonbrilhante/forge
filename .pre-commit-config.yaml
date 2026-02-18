@@ -83,7 +83,7 @@ repos:
   # Commit Message Hooks
   # ---------------------
   - repo: https://github.com/commitizen-tools/commitizen
-    rev: v4.13.7
+    rev: v4.13.8
     hooks:
       - id: commitizen
         name: Git · Validate commit message
@@ -165,7 +165,7 @@ repos:
         name: Python · Import sorter
 
   - repo: https://github.com/PyCQA/autoflake
-    rev: v2.3.1
+    rev: v2.3.2
     hooks:
       - id: autoflake
         name: Python · Remove unused imports
@@ -196,7 +196,7 @@ repos:
   # JSON Schema Hooks
   # ---------------------
   - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: 0.36.1
+    rev: 0.36.2
     hooks:
       - id: check-github-workflows
         name: JSON Schema · GitHub workflows
