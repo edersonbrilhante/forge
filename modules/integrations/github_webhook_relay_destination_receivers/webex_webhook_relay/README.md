@@ -47,7 +47,7 @@ Both `token` and `room_id` keys are required. The function will prepend `Bearer 
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.11.0 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | ~> 1.11 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.25 |
 | <a name="requirement_time"></a> [time](#requirement\_time) | >= 0.13.1 |
 
@@ -55,14 +55,14 @@ Both `token` and `room_id` keys are required. The function will prepend `Bearer 
 
 | Name | Version |
 |------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.25.0 |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.35.1 |
 | <a name="provider_time"></a> [time](#provider\_time) | 0.13.1 |
 
 ## Modules
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_webex"></a> [webex](#module\_webex) | terraform-aws-modules/lambda/aws | 8.1.2 |
+| <a name="module_webex"></a> [webex](#module\_webex) | terraform-aws-modules/lambda/aws | 8.7.0 |
 
 ## Resources
 

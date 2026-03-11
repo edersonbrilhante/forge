@@ -3,7 +3,7 @@
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.11.0 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | ~> 1.11 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.25 |
 | <a name="requirement_signalfx"></a> [signalfx](#requirement\_signalfx) | < 10.0.0 |
 | <a name="requirement_time"></a> [time](#requirement\_time) | >= 0.13 |
@@ -12,8 +12,8 @@
 
 | Name | Version |
 |------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.25.0 |
-| <a name="provider_signalfx"></a> [signalfx](#provider\_signalfx) | 9.23.0 |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.35.1 |
+| <a name="provider_signalfx"></a> [signalfx](#provider\_signalfx) | 9.25.1 |
 | <a name="provider_time"></a> [time](#provider\_time) | 0.13.1 |
 
 ## Modules
@@ -30,6 +30,7 @@ No modules.
 | [signalfx_aws_external_integration.integration](https://registry.terraform.io/providers/splunk-terraform/signalfx/latest/docs/resources/aws_external_integration) | resource |
 | [signalfx_aws_integration.integration](https://registry.terraform.io/providers/splunk-terraform/signalfx/latest/docs/resources/aws_integration) | resource |
 | [time_sleep.wait_30_seconds](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/sleep) | resource |
+| [aws_caller_identity.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
 | [aws_iam_policy_document.assume_role_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 | [aws_iam_policy_document.splunk_integration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 | [aws_iam_policy_document.splunk_managed_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
@@ -40,8 +41,7 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_aws_account_id"></a> [aws\_account\_id](#input\_aws\_account\_id) | AWS account ID (not SL AWS account ID) associated with the infra/backend. | `string` | n/a | yes |
-| <a name="input_aws_profile"></a> [aws\_profile](#input\_aws\_profile) | AWS profile (i.e., generated via 'sl aws session generate') to use. | `string` | n/a | yes |
+| <a name="input_aws_profile"></a> [aws\_profile](#input\_aws\_profile) | AWS profile to use. | `string` | n/a | yes |
 | <a name="input_aws_region"></a> [aws\_region](#input\_aws\_region) | Default AWS region. | `string` | n/a | yes |
 | <a name="input_default_tags"></a> [default\_tags](#input\_default\_tags) | A map of tags to apply to resources. | `map(string)` | n/a | yes |
 | <a name="input_integration_name"></a> [integration\_name](#input\_integration\_name) | Name of the integration. | `string` | n/a | yes |

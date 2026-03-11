@@ -3,20 +3,20 @@
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.11.0 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | ~> 1.11 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.25 |
 
 ## Providers
 
 | Name | Version |
 |------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.25.0 |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.35.1 |
 
 ## Modules
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_ec2_update_runner_tags_lambda"></a> [ec2\_update\_runner\_tags\_lambda](#module\_ec2\_update\_runner\_tags\_lambda) | terraform-aws-modules/lambda/aws | 8.1.2 |
+| <a name="module_ec2_update_runner_tags_lambda"></a> [ec2\_update\_runner\_tags\_lambda](#module\_ec2\_update\_runner\_tags\_lambda) | terraform-aws-modules/lambda/aws | 8.7.0 |
 
 ## Resources
 

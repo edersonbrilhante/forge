@@ -3,14 +3,14 @@
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.11.0 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | ~> 1.11 |
 | <a name="requirement_signalfx"></a> [signalfx](#requirement\_signalfx) | < 10.0.0 |
 
 ## Providers
 
 | Name | Version |
 |------|---------|
-| <a name="provider_signalfx"></a> [signalfx](#provider\_signalfx) | 9.23.0 |
+| <a name="provider_signalfx"></a> [signalfx](#provider\_signalfx) | 9.25.1 |
 
 ## Modules
 
