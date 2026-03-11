@@ -3,7 +3,7 @@
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.11.0 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | ~> 1.11 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.25 |
 | <a name="requirement_external"></a> [external](#requirement\_external) | >= 2.3 |
 | <a name="requirement_helm"></a> [helm](#requirement\_helm) | >= 3.0.0 |
@@ -14,7 +14,7 @@
 
 | Name | Version |
 |------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.25.0 |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.35.1 |
 | <a name="provider_external"></a> [external](#provider\_external) | 2.3.5 |
 | <a name="provider_kubernetes"></a> [kubernetes](#provider\_kubernetes) | 3.0.1 |
 | <a name="provider_null"></a> [null](#provider\_null) | 3.2.4 |

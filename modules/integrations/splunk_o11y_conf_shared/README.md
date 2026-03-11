@@ -3,7 +3,7 @@
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.11.0 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | ~> 1.11 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.25 |
 | <a name="requirement_signalfx"></a> [signalfx](#requirement\_signalfx) | < 10.0.0 |
 
@@ -11,8 +11,8 @@
 
 | Name | Version |
 |------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.25.0 |
-| <a name="provider_signalfx"></a> [signalfx](#provider\_signalfx) | 9.23.0 |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.35.1 |
+| <a name="provider_signalfx"></a> [signalfx](#provider\_signalfx) | 9.25.1 |
 
 ## Modules
 
@@ -38,7 +38,7 @@
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_aws_profile"></a> [aws\_profile](#input\_aws\_profile) | AWS profile (i.e., generated via 'sl aws session generate') to use. | `string` | n/a | yes |
+| <a name="input_aws_profile"></a> [aws\_profile](#input\_aws\_profile) | AWS profile to use. | `string` | n/a | yes |
 | <a name="input_aws_region"></a> [aws\_region](#input\_aws\_region) | Default AWS region. | `string` | n/a | yes |
 | <a name="input_dashboard_variables"></a> [dashboard\_variables](#input\_dashboard\_variables) | Variables for Dashboards | <pre>object({<br/>    runner_k8s = object({<br/>      tenant_names = list(string)<br/>      dynamic_variables = list(object({<br/>        property               = string<br/>        alias                  = string<br/>        description            = string<br/>        values                 = list(string)<br/>        value_required         = bool<br/>        values_suggested       = list(string)<br/>        restricted_suggestions = bool<br/>        }<br/>      ))<br/>    })<br/>    runner_ec2 = object({<br/>      tenant_names = list(string)<br/>      dynamic_variables = list(object({<br/>        property               = string<br/>        alias                  = string<br/>        description            = string<br/>        values                 = list(string)<br/>        value_required         = bool<br/>        values_suggested       = list(string)<br/>        restricted_suggestions = bool<br/>        }<br/>      ))<br/>    })<br/>    billing = object({<br/>      tenant_names = list(string)<br/>      dynamic_variables = list(object({<br/>        property               = string<br/>        alias                  = string<br/>        description            = string<br/>        values                 = list(string)<br/>        value_required         = bool<br/>        values_suggested       = list(string)<br/>        restricted_suggestions = bool<br/>        }<br/>      ))<br/>    })<br/>    sqs = object({<br/>      tenant_names = list(string)<br/>      dynamic_variables = list(object({<br/>        property               = string<br/>        alias                  = string<br/>        description            = string<br/>        values                 = list(string)<br/>        value_required         = bool<br/>        values_suggested       = list(string)<br/>        restricted_suggestions = bool<br/>        }<br/>      ))<br/>    })<br/>    ebs = object({<br/>      tenant_names = list(string)<br/>      dynamic_variables = list(object({<br/>        property               = string<br/>        alias                  = string<br/>        description            = string<br/>        values                 = list(string)<br/>        value_required         = bool<br/>        values_suggested       = list(string)<br/>        restricted_suggestions = bool<br/>        }<br/>      ))<br/>    })<br/>    lambda = object({<br/>      tenant_names = list(string)<br/>      dynamic_variables = list(object({<br/>        property               = string<br/>        alias                  = string<br/>        description            = string<br/>        values                 = list(string)<br/>        value_required         = bool<br/>        values_suggested       = list(string)<br/>        restricted_suggestions = bool<br/>        }<br/>      ))<br/>    })<br/>    dynamodb = object({<br/>      tenant_names = list(string)<br/>      dynamic_variables = list(object({<br/>        property               = string<br/>        alias                  = string<br/>        description            = string<br/>        values                 = list(string)<br/>        value_required         = bool<br/>        values_suggested       = list(string)<br/>        restricted_suggestions = bool<br/>        }<br/>      ))<br/>    })<br/>  })</pre> | n/a | yes |
 | <a name="input_default_tags"></a> [default\_tags](#input\_default\_tags) | A map of tags to apply to resources. | `map(string)` | n/a | yes |

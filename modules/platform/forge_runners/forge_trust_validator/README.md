@@ -3,7 +3,7 @@
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.11.0 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | ~> 1.11 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.25 |
 | <a name="requirement_null"></a> [null](#requirement\_null) | >= 3.2 |
 
@@ -11,14 +11,14 @@
 
 | Name | Version |
 |------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.25.0 |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.35.1 |
 | <a name="provider_null"></a> [null](#provider\_null) | 3.2.4 |
 
 ## Modules
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_forge_trust_validator_lambda"></a> [forge\_trust\_validator\_lambda](#module\_forge\_trust\_validator\_lambda) | terraform-aws-modules/lambda/aws | 8.1.2 |
+| <a name="module_forge_trust_validator_lambda"></a> [forge\_trust\_validator\_lambda](#module\_forge\_trust\_validator\_lambda) | terraform-aws-modules/lambda/aws | 8.7.0 |
 
 ## Resources
 

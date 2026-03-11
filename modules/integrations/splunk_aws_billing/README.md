@@ -3,7 +3,7 @@
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.11.0 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | ~> 1.11 |
 | <a name="requirement_archive"></a> [archive](#requirement\_archive) | >= 2.7.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.25 |
 | <a name="requirement_external"></a> [external](#requirement\_external) | >= 2.3 |
@@ -14,15 +14,15 @@
 
 | Name | Version |
 |------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.25.0 |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.35.1 |
 
 ## Modules
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_cur_per_resource"></a> [cur\_per\_resource](#module\_cur\_per\_resource) | terraform-aws-modules/lambda/aws | 8.1.2 |
-| <a name="module_cur_per_resource_process"></a> [cur\_per\_resource\_process](#module\_cur\_per\_resource\_process) | terraform-aws-modules/lambda/aws | 8.1.2 |
-| <a name="module_cur_per_service"></a> [cur\_per\_service](#module\_cur\_per\_service) | terraform-aws-modules/lambda/aws | 8.1.2 |
+| <a name="module_cur_per_resource"></a> [cur\_per\_resource](#module\_cur\_per\_resource) | terraform-aws-modules/lambda/aws | 8.7.0 |
+| <a name="module_cur_per_resource_process"></a> [cur\_per\_resource\_process](#module\_cur\_per\_resource\_process) | terraform-aws-modules/lambda/aws | 8.7.0 |
+| <a name="module_cur_per_service"></a> [cur\_per\_service](#module\_cur\_per\_service) | terraform-aws-modules/lambda/aws | 8.7.0 |
 
 ## Resources
 
@@ -54,7 +54,7 @@
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_aws_profile"></a> [aws\_profile](#input\_aws\_profile) | AWS profile (i.e., generated via 'sl aws session generate') to use. | `string` | n/a | yes |
+| <a name="input_aws_profile"></a> [aws\_profile](#input\_aws\_profile) | AWS profile to use. | `string` | n/a | yes |
 | <a name="input_aws_region"></a> [aws\_region](#input\_aws\_region) | Default AWS region. | `string` | n/a | yes |
 | <a name="input_default_tags"></a> [default\_tags](#input\_default\_tags) | A map of tags to apply to resources. | `map(string)` | n/a | yes |
 | <a name="input_log_level"></a> [log\_level](#input\_log\_level) | Log level for application logging (e.g., INFO, DEBUG, WARN, ERROR) | `string` | `"INFO"` | no |
