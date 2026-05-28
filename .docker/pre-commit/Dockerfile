@@ -1,4 +1,4 @@
-FROM ubuntu:24.04@sha256:d1e2e92c075e5ca139d51a140fff46f84315c0fdce203eab2807c7e495eff4f9 AS build
+FROM ubuntu:24.04@sha256:c4a8d5503dfb2a3eb8ab5f807da5bc69a85730fb49b5cfca2330194ebcc41c7b AS build
 
 WORKDIR /opt/build
 
@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y \
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # renovate: datasource=github-releases depName=gitleaks/gitleaks registryUrl=https://github.com/
-ARG GITLEAKS_VERSION="8.30.0"
+ARG GITLEAKS_VERSION="8.30.1"
 ARG GITLEAKS_SRC="https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
 ARG GITLEAKS_ARTIFACT="gitleaks.tar.gz"
 RUN set -eux; \
@@ -40,7 +40,7 @@ RUN set -eux; \
     chmod 755 /usr/local/bin/jq
 
 # renovate: datasource=github-releases depName=hashicorp/packer registryUrl=https://github.com/
-ARG PACKER_VERSION="1.15.0"
+ARG PACKER_VERSION="1.15.3"
 ARG PACKER_SRC="https://releases.hashicorp.com/packer/${PACKER_VERSION}/packer_${PACKER_VERSION}_linux_amd64.zip"
 ARG PACKER_ARTIFACT="packer.zip"
 RUN set -eux; \
@@ -60,7 +60,7 @@ RUN set -eux; \
     chmod 755 /usr/local/bin/shellcheck
 
 # renovate: datasource=github-releases depName=mvdan/sh registryUrl=https://github.com/
-ARG SHFMT_VERSION="3.13.0"
+ARG SHFMT_VERSION="3.13.1"
 ARG SHFMT_SRC="https://github.com/mvdan/sh/releases/download/v${SHFMT_VERSION}/shfmt_v${SHFMT_VERSION}_linux_amd64"
 ARG SHFMT_ARTIFACT="shfmt"
 RUN set -eux; \
@@ -69,7 +69,7 @@ RUN set -eux; \
     chmod 755 /usr/local/bin/shfmt
 
 # renovate: datasource=github-releases depName=terraform-docs/terraform-docs registryUrl=https://github.com/
-ARG TERRAFORM_DOCS_VERSION="0.21.0"
+ARG TERRAFORM_DOCS_VERSION="0.24.0"
 ARG TERRAFORM_DOCS_SRC="https://github.com/terraform-docs/terraform-docs/releases/download/v${TERRAFORM_DOCS_VERSION}/terraform-docs-v${TERRAFORM_DOCS_VERSION}-linux-amd64.tar.gz"
 ARG TERRAFORM_DOCS_ARTIFACT="terraform-docs.tar.gz"
 RUN set -eux; \
@@ -78,7 +78,7 @@ RUN set -eux; \
     chmod 755 /usr/local/bin/terraform-docs
 
 # renovate: datasource=github-releases depName=gruntwork-io/terragrunt registryUrl=https://github.com/
-ARG TERRAGRUNT_VERSION="0.99.4"
+ARG TERRAGRUNT_VERSION="1.0.6"
 ARG TERRAGRUNT_SRC="https://github.com/gruntwork-io/terragrunt/releases/download/v${TERRAGRUNT_VERSION}/terragrunt_linux_amd64"
 ARG TERRAGRUNT_ARTIFACT="terragrunt"
 RUN set -eux; \
@@ -87,7 +87,7 @@ RUN set -eux; \
     chmod 755 /usr/local/bin/terragrunt
 
 # renovate: datasource=github-releases depName=terraform-linters/tflint registryUrl=https://github.com/
-ARG TFLINT_VERSION="0.61.0"
+ARG TFLINT_VERSION="0.62.1"
 ARG TFLINT_SRC="https://github.com/terraform-linters/tflint/releases/download/v${TFLINT_VERSION}/tflint_linux_amd64.zip"
 ARG TFLINT_ARTIFACT="tflint.zip"
 RUN set -eux; \
@@ -96,7 +96,7 @@ RUN set -eux; \
     chmod 755 /usr/local/bin/tflint;
 
 # renovate: datasource=github-releases depName=opentofu/opentofu registryUrl=https://github.com/
-ARG TOFU_VERSION="1.11.5"
+ARG TOFU_VERSION="1.11.8"
 ARG TOFU_SRC="https://github.com/opentofu/opentofu/releases/download/v${TOFU_VERSION}/tofu_${TOFU_VERSION}_linux_amd64.zip"
 ARG TOFU_ARTIFACT="tofu.zip"
 RUN set -eux; \
@@ -104,7 +104,7 @@ RUN set -eux; \
     unzip -o ${TOFU_ARTIFACT} -d /usr/local/bin/; \
     chmod 755 /usr/local/bin/tofu
 
-FROM ubuntu:24.04@sha256:d1e2e92c075e5ca139d51a140fff46f84315c0fdce203eab2807c7e495eff4f9 AS final
+FROM ubuntu:24.04@sha256:c4a8d5503dfb2a3eb8ab5f807da5bc69a85730fb49b5cfca2330194ebcc41c7b AS final
 
 ENV DEBIAN_FRONTEND=noninteractive
 

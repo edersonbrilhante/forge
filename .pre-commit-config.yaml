@@ -83,7 +83,7 @@ repos:
   # Commit Message Hooks
   # ---------------------
   - repo: https://github.com/commitizen-tools/commitizen
-    rev: v4.13.9
+    rev: v4.15.1
     hooks:
       - id: commitizen
         name: Git · Validate commit message
@@ -196,7 +196,7 @@ repos:
   # JSON Schema Hooks
   # ---------------------
   - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: 0.37.0
+    rev: 0.37.2
     hooks:
       - id: check-github-workflows
         name: JSON Schema · GitHub workflows
@@ -256,7 +256,7 @@ repos:
   # Security Hooks
   # ---------------------
   - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.30.0
+    rev: v8.30.1
     hooks:
       - id: gitleaks
         name: Security · Gitleaks
@@ -266,7 +266,7 @@ repos:
   # Ansible Hooks
   # ---------------------
   - repo: https://github.com/ansible-community/ansible-lint.git
-    rev: v26.3.0
+    rev: v26.4.0
     hooks:
       - id: ansible-lint
         name: Ansible · Linter
