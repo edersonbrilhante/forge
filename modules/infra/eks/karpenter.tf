@@ -1,11 +1,13 @@
 module "karpenter" {
   source  = "terraform-aws-modules/eks/aws//modules/karpenter"
-  version = "21.15.1"
+  version = "21.23.0"
 
   namespace    = "karpenter"
   cluster_name = var.cluster_name
 
   create_instance_profile = true
+
+  enable_inline_policy = true
 
   tags = merge(local.all_security_tags, { "calico_dependency" = local._wait_for_calico })
 
@@ -18,7 +20,7 @@ resource "null_resource" "karpenter" {
   depends_on = [module.eks]
 
   triggers = {
-    chart_version      = "1.8.3"
+    chart_version      = "1.12.0"
     service_account    = module.karpenter.service_account
     cluster_name       = module.eks.cluster_name
     cluster_endpoint   = module.eks.cluster_endpoint
