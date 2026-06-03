@@ -1,4 +1,4 @@
-FROM ubuntu:24.04@sha256:c4a8d5503dfb2a3eb8ab5f807da5bc69a85730fb49b5cfca2330194ebcc41c7b AS build
+FROM ubuntu:24.04@sha256:786a8b558f7be160c6c8c4a54f9a57274f3b4fb1491cf65146521ae77ff1dc54 AS build
 
 WORKDIR /opt/build
 
@@ -78,7 +78,7 @@ RUN set -eux; \
     chmod 755 /usr/local/bin/terraform-docs
 
 # renovate: datasource=github-releases depName=gruntwork-io/terragrunt registryUrl=https://github.com/
-ARG TERRAGRUNT_VERSION="1.0.6"
+ARG TERRAGRUNT_VERSION="1.0.7"
 ARG TERRAGRUNT_SRC="https://github.com/gruntwork-io/terragrunt/releases/download/v${TERRAGRUNT_VERSION}/terragrunt_linux_amd64"
 ARG TERRAGRUNT_ARTIFACT="terragrunt"
 RUN set -eux; \
@@ -87,7 +87,7 @@ RUN set -eux; \
     chmod 755 /usr/local/bin/terragrunt
 
 # renovate: datasource=github-releases depName=terraform-linters/tflint registryUrl=https://github.com/
-ARG TFLINT_VERSION="0.62.1"
+ARG TFLINT_VERSION="0.63.0"
 ARG TFLINT_SRC="https://github.com/terraform-linters/tflint/releases/download/v${TFLINT_VERSION}/tflint_linux_amd64.zip"
 ARG TFLINT_ARTIFACT="tflint.zip"
 RUN set -eux; \
@@ -96,7 +96,7 @@ RUN set -eux; \
     chmod 755 /usr/local/bin/tflint;
 
 # renovate: datasource=github-releases depName=opentofu/opentofu registryUrl=https://github.com/
-ARG TOFU_VERSION="1.11.8"
+ARG TOFU_VERSION="1.12.1"
 ARG TOFU_SRC="https://github.com/opentofu/opentofu/releases/download/v${TOFU_VERSION}/tofu_${TOFU_VERSION}_linux_amd64.zip"
 ARG TOFU_ARTIFACT="tofu.zip"
 RUN set -eux; \
@@ -104,7 +104,7 @@ RUN set -eux; \
     unzip -o ${TOFU_ARTIFACT} -d /usr/local/bin/; \
     chmod 755 /usr/local/bin/tofu
 
-FROM ubuntu:24.04@sha256:c4a8d5503dfb2a3eb8ab5f807da5bc69a85730fb49b5cfca2330194ebcc41c7b AS final
+FROM ubuntu:24.04@sha256:786a8b558f7be160c6c8c4a54f9a57274f3b4fb1491cf65146521ae77ff1dc54 AS final
 
 ENV DEBIAN_FRONTEND=noninteractive
 
