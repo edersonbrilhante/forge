@@ -153,3 +153,9 @@ variable "migrate_arc_cluster" {
   description = "Flag to indicate if the cluster is being migrated."
   default     = false
 }
+
+variable "log_level" {
+  type        = string
+  description = "Log level for runner pod commands (e.g., INFO, DEBUG, WARN, ERROR). When set to DEBUG, runner template shell commands and dockerd run in verbose mode."
+  default     = "INFO"
+}
