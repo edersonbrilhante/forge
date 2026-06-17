@@ -78,7 +78,7 @@ RUN set -eux; \
     chmod 755 /usr/local/bin/terraform-docs
 
 # renovate: datasource=github-releases depName=gruntwork-io/terragrunt registryUrl=https://github.com/
-ARG TERRAGRUNT_VERSION="1.0.7"
+ARG TERRAGRUNT_VERSION="1.0.8"
 ARG TERRAGRUNT_SRC="https://github.com/gruntwork-io/terragrunt/releases/download/v${TERRAGRUNT_VERSION}/terragrunt_linux_amd64"
 ARG TERRAGRUNT_ARTIFACT="terragrunt"
 RUN set -eux; \
@@ -96,7 +96,7 @@ RUN set -eux; \
     chmod 755 /usr/local/bin/tflint;
 
 # renovate: datasource=github-releases depName=opentofu/opentofu registryUrl=https://github.com/
-ARG TOFU_VERSION="1.12.1"
+ARG TOFU_VERSION="1.12.2"
 ARG TOFU_SRC="https://github.com/opentofu/opentofu/releases/download/v${TOFU_VERSION}/tofu_${TOFU_VERSION}_linux_amd64.zip"
 ARG TOFU_ARTIFACT="tofu.zip"
 RUN set -eux; \
