@@ -1,3 +1,25 @@
+# ARC Core
+
+This module installs the core Actions Runner Controller resources for one Forge tenant on an EKS cluster.
+
+## Why This Module Exists
+
+In Forge, the Kubernetes lane turns GitHub Actions jobs into ephemeral pods. This module is the tenant-level orchestrator: it installs the controller, creates scale sets, and applies the Karpenter objects that give each tenant its own scheduling boundary.
+
+## What It Manages
+
+- The ARC scale set controller.
+- One ARC scale set per configured runner pool.
+- Tenant-scoped Karpenter EC2NodeClass and NodePool manifests.
+- A Kubernetes storage class used by runner volumes.
+- Outputs for runner role ARNs and subnet CIDR visibility.
+
+## Operational Notes
+
+- `migrate_arc_cluster` is the blue/green cutover switch; it should be true only during an intentional tenant migration.
+- The DinD path depends on tenant-specific node pools for blast-radius isolation.
+- Provider configuration resolves from the EKS cluster name, so changing the target cluster name repoints the in-cluster resources.
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
@@ -14,7 +36,7 @@
 
 | Name | Version |
 | ---- | ------- |
-| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.50.0 |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.51.0 |
 | <a name="provider_external"></a> [external](#provider\_external) | 2.4.0 |
 | <a name="provider_kubernetes"></a> [kubernetes](#provider\_kubernetes) | 3.2.0 |
 | <a name="provider_null"></a> [null](#provider\_null) | 3.3.0 |
@@ -53,7 +75,7 @@
 | <a name="input_github_app"></a> [github\_app](#input\_github\_app) | GitHub App configuration | <pre>object({<br/>    key_base64      = string<br/>    id              = string<br/>    installation_id = string<br/>  })</pre> | n/a | yes |
 | <a name="input_log_level"></a> [log\_level](#input\_log\_level) | Log level for ARC controller and runner pod commands (e.g., INFO, DEBUG, WARN, ERROR). When set to DEBUG, runner template shell commands and dockerd run in verbose mode. | `string` | `"INFO"` | no |
 | <a name="input_migrate_arc_cluster"></a> [migrate\_arc\_cluster](#input\_migrate\_arc\_cluster) | Flag to indicate if the cluster should be migrated. | `bool` | `false` | no |
-| <a name="input_multi_runner_config"></a> [multi\_runner\_config](#input\_multi\_runner\_config) | multi\_runner\_config = {<br/>      runner\_config: {<br/>        runner\_size: {<br/>          max\_runners: "Maximum number of runners."<br/>          min\_runners: "Minimum number of runners."<br/>        }<br/>        controller = {<br/>          service\_account: "Service Account Name of the controller."<br/>          namespace: "Namespace for the controller."<br/>        }<br/>        prefix: "Prefix for naming resources."<br/>        scale\_set\_name: "Name of the scale set."<br/>        scale\_set\_labels: "GitHub runner labels advertised by the ARC scale set."<br/>        runner\_iam\_role\_managed\_policy\_arns: "Attach AWS or customer-managed IAM policies (by ARN) to the runner IAM role."<br/>      }<br/>      runner\_set\_configs: {<br/>        release\_name: "Name of the Helm release."<br/>        namespace: "Namespace for chart installation."<br/>        chart\_name: "Chart name for the Helm chart."<br/>        chart\_version: "Chart version for the Helm chart."<br/>      }<br/>    } | <pre>map(object({<br/>    runner_set_configs = object({<br/>      release_name  = string<br/>      namespace     = string<br/>      chart_name    = string<br/>      chart_version = string<br/>    })<br/>    runner_config = object({<br/>      runner_size = object({<br/>        max_runners = number<br/>        min_runners = number<br/>      })<br/>      prefix                              = string<br/>      scale_set_name                      = string<br/>      scale_set_type                      = string<br/>      scale_set_labels                    = list(string)<br/>      container_limits_cpu                = string<br/>      container_limits_memory             = string<br/>      container_requests_cpu              = string<br/>      container_requests_memory           = string<br/>      volume_requests_storage_size        = string<br/>      volume_requests_storage_type        = string<br/>      container_actions_runner            = string<br/>      container_ecr_registries            = list(string)<br/>      runner_iam_role_managed_policy_arns = list(string)<br/>      controller = object({<br/>        service_account = string<br/>        namespace       = string<br/>      })<br/>    })<br/>  }))</pre> | n/a | yes |
+| <a name="input_multi_runner_config"></a> [multi\_runner\_config](#input\_multi\_runner\_config) | multi\_runner\_config = {<br/>      runner\_config: {<br/>        runner\_size: {<br/>          max\_runners: "Maximum number of runners."<br/>          min\_runners: "Minimum number of runners."<br/>        }<br/>        controller = {<br/>          service\_account: "Service Account Name of the controller."<br/>          namespace: "Namespace for the controller."<br/>        }<br/>        prefix: "Prefix for naming resources."<br/>        scale\_set\_name: "Name of the scale set."<br/>        scale\_set\_labels: "GitHub runner labels advertised by the ARC scale set."<br/>        container\_images: "Container images used by the ARC runner, sidecars, and DinD containers."<br/>        runner\_iam\_role\_managed\_policy\_arns: "Attach AWS or customer-managed IAM policies (by ARN) to the runner IAM role."<br/>      }<br/>      runner\_set\_configs: {<br/>        release\_name: "Name of the Helm release."<br/>        namespace: "Namespace for chart installation."<br/>        chart\_name: "Chart name for the Helm chart."<br/>        chart\_version: "Chart version for the Helm chart."<br/>      }<br/>    } | <pre>map(object({<br/>    runner_set_configs = object({<br/>      release_name  = string<br/>      namespace     = string<br/>      chart_name    = string<br/>      chart_version = string<br/>    })<br/>    runner_config = object({<br/>      runner_size = object({<br/>        max_runners = number<br/>        min_runners = number<br/>      })<br/>      prefix                       = string<br/>      scale_set_name               = string<br/>      scale_set_type               = string<br/>      scale_set_labels             = list(string)<br/>      container_limits_cpu         = string<br/>      container_limits_memory      = string<br/>      container_requests_cpu       = string<br/>      container_requests_memory    = string<br/>      volume_requests_storage_size = string<br/>      volume_requests_storage_type = string<br/>      container_images = optional(object({<br/>        actions_runner = optional(string, "ghcr.io/actions/actions-runner:latest")<br/>        busybox        = optional(string, "public.ecr.aws/docker/library/busybox:stable")<br/>        dind_rootless  = optional(string, "public.ecr.aws/docker/library/docker:dind-rootless")<br/>      }), {})<br/>      container_ecr_registries            = list(string)<br/>      runner_iam_role_managed_policy_arns = list(string)<br/>      controller = object({<br/>        service_account = string<br/>        namespace       = string<br/>      })<br/>    })<br/>  }))</pre> | n/a | yes |
 | <a name="input_runner_group_name"></a> [runner\_group\_name](#input\_runner\_group\_name) | Name of the group applied to all runners. | `string` | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to apply to resources. | `map(string)` | n/a | yes |
 

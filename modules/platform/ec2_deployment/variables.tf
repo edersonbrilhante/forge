@@ -19,21 +19,22 @@ variable "runner_configs" {
     runner_iam_role_managed_policy_arns = list(string)
     runner_group_name                   = string
     scale_errors                        = optional(list(string), [])
-    enable_dynamic_labels               = optional(bool, false)
     runner_specs = map(object({
       ami_filter = object({
         name  = list(string)
         state = list(string)
       })
-      ami_kms_key_arn     = string
-      ami_owners          = list(string)
-      runner_labels       = list(string)
-      runner_os           = string
-      runner_architecture = string
-      extra_labels        = list(string)
-      max_instances       = number
-      min_run_time        = number
-      instance_types      = list(string)
+      ami_kms_key_arn           = string
+      ami_owners                = list(string)
+      runner_labels             = list(string)
+      runner_os                 = string
+      runner_architecture       = string
+      extra_labels              = list(string)
+      enable_dynamic_labels     = optional(bool, false)
+      ec2_dynamic_labels_policy = optional(any, null)
+      max_instances             = number
+      min_run_time              = number
+      instance_types            = list(string)
       license_specifications = optional(list(object({
         license_configuration_arn = string
       })), null)

@@ -1,3 +1,25 @@
+# EC2 Runner Deployment
+
+This module deploys Forge EC2 runner pools using the upstream `terraform-aws-github-runner` multi-runner module.
+
+## Why This Module Exists
+
+The EC2 lane gives a GitHub Actions job a full VM or dedicated host. Forge uses it for workloads that need VM-level control, custom AMIs, macOS/Windows, larger hardware, or stronger isolation than a normal pod can provide.
+
+## What It Manages
+
+- The upstream multi-runner control plane for webhook, scale-up, scale-down, and ephemeral runner registration.
+- Per-runner-pool label matching, AMI selection, instance types, warm pool schedules, and capacity type.
+- KMS key material, Lambda egress security group, runner tags policy, and logging hooks.
+- Supporting modules that update runner tags and runner AMI SSM parameters.
+
+## Operational Notes
+
+- Every EC2 runner is ephemeral; the instance is expected to register for one job and then be reaped.
+- Label sets are the API contract with tenant workflows, so exact matching matters.
+- Cold starts can take minutes; use warm pools only where latency justifies the idle cost.
+- Subnet IP capacity and EC2 capacity errors are expected operational signals, not unusual exceptions.
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
@@ -12,7 +34,7 @@
 
 | Name | Version |
 | ---- | ------- |
-| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.50.0 |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.51.0 |
 | <a name="provider_external"></a> [external](#provider\_external) | 2.4.0 |
 
 ## Modules
@@ -21,7 +43,7 @@
 | ---- | ------ | ------- |
 | <a name="module_ec2_update_runner_ssm_ami"></a> [ec2\_update\_runner\_ssm\_ami](#module\_ec2\_update\_runner\_ssm\_ami) | ./ec2_update_runner_ssm_ami | n/a |
 | <a name="module_ec2_update_runner_tags"></a> [ec2\_update\_runner\_tags](#module\_ec2\_update\_runner\_tags) | ./ec2_update_runner_tags | n/a |
-| <a name="module_runners"></a> [runners](#module\_runners) | git::https://github.com/github-aws-runners/terraform-aws-github-runner.git//modules/multi-runner | v7.7.1 |
+| <a name="module_runners"></a> [runners](#module\_runners) | git::https://github.com/github-aws-runners/terraform-aws-github-runner.git//modules/multi-runner | v7.8.0 |
 
 ## Resources
 
@@ -43,7 +65,7 @@
 | ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_aws_region"></a> [aws\_region](#input\_aws\_region) | Assuming single region for now. | `string` | n/a | yes |
 | <a name="input_network_configs"></a> [network\_configs](#input\_network\_configs) | n/a | <pre>object({<br/>    vpc_id            = string<br/>    subnet_ids        = list(string)<br/>    lambda_vpc_id     = string<br/>    lambda_subnet_ids = list(string)<br/>  })</pre> | n/a | yes |
-| <a name="input_runner_configs"></a> [runner\_configs](#input\_runner\_configs) | n/a | <pre>object({<br/>    env                       = string<br/>    prefix                    = string<br/>    ghes_url                  = string<br/>    ghes_org                  = string<br/>    log_level                 = string<br/>    logging_retention_in_days = string<br/>    github_app = object({<br/>      key_base64     = string<br/>      id             = string<br/>      webhook_secret = string<br/>    })<br/>    runner_iam_role_managed_policy_arns = list(string)<br/>    runner_group_name                   = string<br/>    scale_errors                        = optional(list(string), [])<br/>    enable_dynamic_labels               = optional(bool, false)<br/>    runner_specs = map(object({<br/>      ami_filter = object({<br/>        name  = list(string)<br/>        state = list(string)<br/>      })<br/>      ami_kms_key_arn     = string<br/>      ami_owners          = list(string)<br/>      runner_labels       = list(string)<br/>      runner_os           = string<br/>      runner_architecture = string<br/>      extra_labels        = list(string)<br/>      max_instances       = number<br/>      min_run_time        = number<br/>      instance_types      = list(string)<br/>      license_specifications = optional(list(object({<br/>        license_configuration_arn = string<br/>      })), null)<br/>      placement = optional(object({<br/>        affinity                = optional(string)<br/>        availability_zone       = optional(string)<br/>        group_id                = optional(string)<br/>        group_name              = optional(string)<br/>        host_id                 = optional(string)<br/>        host_resource_group_arn = optional(string)<br/>        spread_domain           = optional(string)<br/>        tenancy                 = optional(string)<br/>        partition_number        = optional(number)<br/>      }), null)<br/>      use_dedicated_host = optional(bool, false)<br/>      pool_config = list(object({<br/>        size                         = number<br/>        schedule_expression          = string<br/>        schedule_expression_timezone = string<br/>      }))<br/>      runner_user                   = string<br/>      enable_userdata               = bool<br/>      instance_target_capacity_type = string<br/>      vpc_id                        = optional(string, null)<br/>      subnet_ids                    = optional(list(string), null)<br/>      block_device_mappings = list(object({<br/>        delete_on_termination = bool<br/>        device_name           = string<br/>        encrypted             = bool<br/>        iops                  = number<br/>        kms_key_id            = string<br/>        snapshot_id           = string<br/>        throughput            = number<br/>        volume_size           = number<br/>        volume_type           = string<br/>      }))<br/>    }))<br/>  })</pre> | n/a | yes |
+| <a name="input_runner_configs"></a> [runner\_configs](#input\_runner\_configs) | n/a | <pre>object({<br/>    env                       = string<br/>    prefix                    = string<br/>    ghes_url                  = string<br/>    ghes_org                  = string<br/>    log_level                 = string<br/>    logging_retention_in_days = string<br/>    github_app = object({<br/>      key_base64     = string<br/>      id             = string<br/>      webhook_secret = string<br/>    })<br/>    runner_iam_role_managed_policy_arns = list(string)<br/>    runner_group_name                   = string<br/>    scale_errors                        = optional(list(string), [])<br/>    runner_specs = map(object({<br/>      ami_filter = object({<br/>        name  = list(string)<br/>        state = list(string)<br/>      })<br/>      ami_kms_key_arn           = string<br/>      ami_owners                = list(string)<br/>      runner_labels             = list(string)<br/>      runner_os                 = string<br/>      runner_architecture       = string<br/>      extra_labels              = list(string)<br/>      enable_dynamic_labels     = optional(bool, false)<br/>      ec2_dynamic_labels_policy = optional(any, null)<br/>      max_instances             = number<br/>      min_run_time              = number<br/>      instance_types            = list(string)<br/>      license_specifications = optional(list(object({<br/>        license_configuration_arn = string<br/>      })), null)<br/>      placement = optional(object({<br/>        affinity                = optional(string)<br/>        availability_zone       = optional(string)<br/>        group_id                = optional(string)<br/>        group_name              = optional(string)<br/>        host_id                 = optional(string)<br/>        host_resource_group_arn = optional(string)<br/>        spread_domain           = optional(string)<br/>        tenancy                 = optional(string)<br/>        partition_number        = optional(number)<br/>      }), null)<br/>      use_dedicated_host = optional(bool, false)<br/>      pool_config = list(object({<br/>        size                         = number<br/>        schedule_expression          = string<br/>        schedule_expression_timezone = string<br/>      }))<br/>      runner_user                   = string<br/>      enable_userdata               = bool<br/>      instance_target_capacity_type = string<br/>      vpc_id                        = optional(string, null)<br/>      subnet_ids                    = optional(list(string), null)<br/>      block_device_mappings = list(object({<br/>        delete_on_termination = bool<br/>        device_name           = string<br/>        encrypted             = bool<br/>        iops                  = number<br/>        kms_key_id            = string<br/>        snapshot_id           = string<br/>        throughput            = number<br/>        volume_size           = number<br/>        volume_type           = string<br/>      }))<br/>    }))<br/>  })</pre> | n/a | yes |
 | <a name="input_tenant_configs"></a> [tenant\_configs](#input\_tenant\_configs) | n/a | <pre>object({<br/>    ecr_registries = list(string)<br/>    tags           = map(string)<br/>  })</pre> | n/a | yes |
 
 ## Outputs
