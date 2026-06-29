@@ -1,3 +1,20 @@
+# Wait for the EKS Pod Identity association to propagate before the Helm
+# release creates pods that rely on it. Propagation can take several minutes;
+# without this delay the otel collector pods can start before the association
+# is effective and fail to assume the IAM role.
+resource "time_sleep" "wait_for_pod_identity_propagation" {
+  depends_on = [
+    resource.aws_eks_pod_identity_association.eks_pod_identity
+  ]
+
+  create_duration  = "180s"
+  destroy_duration = "30s"
+
+  triggers = {
+    pod_identity_association_id = resource.aws_eks_pod_identity_association.eks_pod_identity.association_id
+  }
+}
+
 resource "helm_release" "splunk_otel_collector" {
   name             = "splunk-otel-collector"
   repository       = "https://signalfx.github.io/splunk-otel-collector-chart"
@@ -72,4 +89,9 @@ resource "helm_release" "splunk_otel_collector" {
   force_update    = true
   cleanup_on_fail = true
   timeout         = 1200
+
+  depends_on = [
+    resource.aws_eks_pod_identity_association.eks_pod_identity,
+    time_sleep.wait_for_pod_identity_propagation,
+  ]
 }
