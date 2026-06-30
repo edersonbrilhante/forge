@@ -78,6 +78,14 @@ missing or invalid webhook token return HTTP 403 and are logged as
 `request_rejected` with request metadata such as source IP, method, path, route
 key, user agent, and token length. The token value is never logged.
 
+The shared `splunk_cloud_conf_shared` module owns the dispatcher Splunk
+transforms, dashboards, and `props/aws:cloudwatchlogs` report bindings. Those
+shared assets extract dispatcher fields such as `stuck_dispatcher_tenant`,
+`stuck_dispatcher_repository`, `stuck_dispatcher_workflow_job_id`, and runner
+capacity counters. The dashboards also parse dispatcher fields inline with
+`rex`, so they keep working before those transforms are visible in Splunk
+search.
+
 ## Example Module Call
 
 ```hcl
@@ -129,7 +137,7 @@ The tenant mapping is stored in SSM chunks because large multi-tenant configurat
 
 | Name | Version |
 | ---- | ------- |
-| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.51.0 |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.52.0 |
 | <a name="provider_random"></a> [random](#provider\_random) | 3.9.0 |
 | <a name="provider_splunk"></a> [splunk](#provider\_splunk) | 1.5.3 |
 
