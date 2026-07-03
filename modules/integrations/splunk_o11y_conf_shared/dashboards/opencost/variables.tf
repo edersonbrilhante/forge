@@ -3,8 +3,13 @@ variable "dashboard_group" {
   type        = string
 }
 
+variable "tenant_names" {
+  description = "Tenant namespaces used to scope OpenCost allocation metrics."
+  type        = list(string)
+}
+
 variable "dynamic_variables" {
-  description = "Additional dynamic variable definitions for the dashboard."
+  description = "Additional dynamic variable definitions for deriving dashboard filters."
   type = list(object({
     property               = string
     alias                  = string
@@ -15,9 +20,4 @@ variable "dynamic_variables" {
     restricted_suggestions = bool
   }))
   default = []
-}
-
-variable "tenant_names" {
-  description = "Tenant namespaces that run Forge ARC runners."
-  type        = list(string)
 }

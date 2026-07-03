@@ -40,6 +40,12 @@ variable "detector_name_prefix" {
   default     = "ForgeCICD"
 }
 
+variable "dashboard_group_name" {
+  description = "Name to use for the Splunk Observability dashboard group."
+  type        = string
+  default     = "ForgeCICD Dashboards"
+}
+
 variable "k8s_detector_config" {
   description = "Thresholds and durations for Forge Kubernetes detectors."
   type = object({
@@ -191,6 +197,19 @@ variable "dashboard_variables" {
         }
       ))
     })
+    forge_impact = optional(object({
+      tenant_names = list(string)
+      dynamic_variables = list(object({
+        property               = string
+        alias                  = string
+        description            = string
+        values                 = list(string)
+        value_required         = bool
+        values_suggested       = list(string)
+        restricted_suggestions = bool
+        }
+      ))
+    }))
   })
   description = "Variables for Dashboards"
 }
