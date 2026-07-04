@@ -5,6 +5,12 @@ updates:
     directory: /
     schedule:
       interval: daily
+    cooldown:
+      default-days: 7
+    groups:
+      github-actions-dependencies:
+        patterns:
+          - '*'
     labels:
       - dependencies
       - github-actions
@@ -13,6 +19,12 @@ updates:
     directory: /
     schedule:
       interval: daily
+    cooldown:
+      default-days: 7
+    groups:
+      python-dependencies:
+        patterns:
+          - '*'
     labels:
       - dependencies
       - python
@@ -21,6 +33,12 @@ updates:
     directory: /modules
     schedule:
       interval: daily
+    cooldown:
+      default-days: 7
+    groups:
+      terraform-modules-dependencies:
+        patterns:
+          - '*'
     labels:
       - dependencies
       - terraform
@@ -29,6 +47,12 @@ updates:
     directory: /examples/deployments
     schedule:
       interval: daily
+    cooldown:
+      default-days: 7
+    groups:
+      terraform-examples-dependencies:
+        patterns:
+          - '*'
     labels:
       - dependencies
       - terraform
@@ -37,6 +61,12 @@ updates:
     directory: /.docker
     schedule:
       interval: daily
+    cooldown:
+      default-days: 7
+    groups:
+      docker-dependencies:
+        patterns:
+          - '*'
     labels:
       - dependencies
       - docker
