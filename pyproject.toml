@@ -13,5 +13,5 @@ lambda-tests = [
     "PyJWT==2.13.0",
     "requests==2.34.2",
     "cryptography==49.0.0",
-    "responses==0.26.1",
+    "responses==0.26.2",
 ]
