@@ -2,7 +2,7 @@
 # Config minima para provar o ciclo tofu + MiniStack antes de apontar para os
 # stacks reais do Forge. Espelha a forma do data plane (fila, bucket, segredo).
 terraform {
-  required_version = ">= 1.11"
+  required_version = ">= 1.12.3"
   required_providers {
     aws = {
       source  = "hashicorp/aws"
