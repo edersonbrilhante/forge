@@ -1,0 +1,19 @@
+---
+forge:
+  runner_roles:
+    - arn:aws:iam::123456789012:role/acme-euw1-main-small-runner-role
+    - arn:aws:iam::123456789012:role/acme-euw1-main-standard-runner-role
+    - arn:aws:iam::123456789012:role/acme-euw1-main-large-runner-role
+    - arn:aws:iam::123456789012:role/acme-euw1-main-dependabot-arc-runner-role
+    - arn:aws:iam::123456789012:role/acme-euw1-main-k8s-arc-runner-role
+
+  ecr_repositories:
+    names:
+      - pre-commit
+      - ops-builder
+      - actions-runner
+      - actions-runner-base-image
+    ecr_access_account_ids:
+      - '123456789013'
+    regions:
+      - eu-west-1

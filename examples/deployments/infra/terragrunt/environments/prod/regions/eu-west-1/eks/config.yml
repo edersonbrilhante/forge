@@ -1,0 +1,25 @@
+---
+cluster_name: forge-euw1-prod
+cluster_version: '1.31'
+cluster_size:
+  instance_type: m5.large
+  min_size: 3
+  max_size: 10
+  desired_size: 3
+subnet_ids:
+  - subnet-0abc1234def567890
+  - subnet-0123456789abcdef0
+vpc_id: vpc-0abc1234def567890
+cluster_ami_filter:
+  - EKS1.31Ubuntu22-amd64-hvm-*
+cluster_ami_owners:
+  - '123456789012'
+cluster_volume:
+  size: 200
+  iops: 3000
+  throughput: 125
+  type: gp3
+cluster_endpoint_public_access: false
+external_access_cidr_blocks:
+  - 10.0.0.0/8
+cluster_admin_role_arn: arn:aws:iam::123456789012:role/eks-cluster-admin
