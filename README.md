@@ -1,11 +1,11 @@
 # ForgeMT
 
 [![Release](https://img.shields.io/github/v/release/cisco-open/forge?display_name=tag)](https://github.com/cisco-open/forge/releases/latest/)
-[![License](https://img.shields.io/github/license/cisco-open/forge)](LICENSE.md)
+[![License](https://img.shields.io/github/license/cisco-open/forge)](LICENSE)
 [![Maintainer](https://img.shields.io/badge/Maintainer-Cisco-00bceb.svg)](https://opensource.cisco.com)
 [![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-blue.svg)](https://cisco-open.github.io/forge/)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/cisco-open/forge/badge)](https://scorecard.dev/viewer/?uri=github.com/cisco-open/forge)
-[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/10894/badge)](https://www.bestpractices.dev/projects/10905)
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/10905/badge)](https://www.bestpractices.dev/projects/10905)
 ![CI](https://img.shields.io/github/check-runs/cisco-open/forge/main)
 ![Commits since latest release](https://img.shields.io/github/commits-since/cisco-open/forge/latest)
 [![Contributors](https://img.shields.io/github/contributors/cisco-open/forge)](https://github.com/cisco-open/forge/graphs/contributors)
@@ -117,7 +117,6 @@ AWS role, ECR, and troubleshooting patterns.
 
 Technical background:
 
-- [No Silver Bullets: Engineering a Multi-Tenant CI Platform a Small Team Can Run](https://dev.to/edersonbrilhante/no-silver-bullets-engineering-a-multi-tenant-ci-platform-a-small-team-can-run-if)
 - [Forge: scalable, secure multi-tenant GitHub runner platform](https://www.linkedin.com/pulse/forge-scalable-secure-multi-tenant-github-runner-brilhante--fyxbf)
 - [Scaling GitHub Actions on AWS with ForgeMT's security and multi-tenancy](https://hackernoon.com/scaling-github-actions-on-aws-with-forgemts-security-and-multi-tenancy)
 - [No Silver Bullets: engineering a multi-tenant CI platform a small team can run](https://www.linkedin.com/pulse/silver-bullets-engineering-multi-tenant-ci-platform-small-brilhante-ofjpf/)

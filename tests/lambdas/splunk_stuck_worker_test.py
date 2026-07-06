@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import base64
 import importlib
 import json
 import sys
 from pathlib import Path
+from types import SimpleNamespace
 
 import boto3
 import pytest
@@ -31,11 +33,89 @@ def _load_worker(monkeypatch):
     return importlib.import_module('worker')
 
 
+def test_normalize_private_key_decodes_base64_pem(monkeypatch, aws):
+    mod = _load_worker(monkeypatch)
+    key_label = 'PRIVATE KEY'
+    pem = (
+        f'-----BEGIN {key_label}-----\n'
+        'abc123\n'
+        f'-----END {key_label}-----'
+    )
+    encoded = base64.b64encode(pem.encode()).decode()
+
+    assert mod.normalize_private_key(encoded) == pem
+
+
+def test_create_github_app_jwt_uses_pyjwt_rs256(monkeypatch, aws):
+    mod = _load_worker(monkeypatch)
+    calls = []
+    monkeypatch.setattr(mod.time, 'time', lambda: 2000)
+
+    def _encode(payload, key, algorithm):
+        calls.append((payload, key, algorithm))
+        return 'jwt-token'
+
+    monkeypatch.setitem(sys.modules, 'jwt', SimpleNamespace(encode=_encode))
+
+    assert mod.create_github_app_jwt('app-client-id', 'pem-key') == 'jwt-token'
+    assert calls == [
+        (
+            {'iat': 1940, 'exp': 2540, 'iss': 'app-client-id'},
+            'pem-key',
+            'RS256',
+        ),
+    ]
+
+
+def test_github_request_uses_requests(monkeypatch, aws):
+    mod = _load_worker(monkeypatch)
+    calls = []
+
+    def _request(method, url, headers, json, timeout):
+        calls.append((method, url, headers, json, timeout))
+        return SimpleNamespace(
+            status_code=404,
+            headers={'X-GitHub-Request-Id': 'abc123'},
+            content=b'not found',
+        )
+
+    monkeypatch.setitem(sys.modules, 'requests',
+                        SimpleNamespace(request=_request))
+
+    status, headers, body = mod.github_request(
+        'jwt-token',
+        'POST',
+        '/app/hook/deliveries/1/attempts',
+        body={'redeliver': True},
+        api_url='https://api.github.test',
+        api_version='2022-11-28',
+    )
+
+    assert status == 404
+    assert headers == {'x-github-request-id': 'abc123'}
+    assert body == b'not found'
+    assert calls == [
+        (
+            'POST',
+            'https://api.github.test/app/hook/deliveries/1/attempts',
+            {
+                'Accept': 'application/vnd.github+json',
+                'Authorization': 'Bearer jwt-token',
+                'Content-Type': 'application/json',
+                'User-Agent': 'forge-stuck-workflow-job-redelivery',
+                'X-GitHub-Api-Version': '2022-11-28',
+            },
+            {'redeliver': True},
+            30,
+        ),
+    ]
+
+
 def test_normalize_delivery_references_dedupes_ids_and_guids(
     monkeypatch, aws
 ):
     mod = _load_worker(monkeypatch)
-    guid = 'F1234567-89AB-4CDE-8123-456789ABCDEF'
+    guid = '9FFF76F0-77ED-11F1-910C-57C17856FA99'
 
     ids, guids = mod.normalize_delivery_references([
         '123',
@@ -54,55 +134,50 @@ def test_normalize_delivery_references_rejects_invalid_value(
 ):
     mod = _load_worker(monkeypatch)
 
-    with pytest.raises(ValueError, match='Invalid delivery ID/GUID'):
+    with pytest.raises(ValueError, match='Invalid GitHub delivery reference'):
         mod.normalize_delivery_references(['not-a-delivery-reference'])
 
 
-def test_delivery_rows_combines_explicit_ids_and_resolved_guids(
-    monkeypatch, aws
-):
+def test_delivery_rows_uses_numeric_delivery_ids_directly(monkeypatch, aws):
     mod = _load_worker(monkeypatch)
-    guid = 'f1234567-89ab-4cde-8123-456789abcdef'
-    monkeypatch.setattr(
-        mod,
-        'resolve_delivery_guid_rows',
-        lambda jwt, guids, installation_id, api_url, api_version: [
-            {
-                'id': '99',
-                'guid': guids[0],
-                'event': 'workflow_job',
-                'action': 'queued',
-                'delivered_at': '-',
-                'status_code': '500',
-                'status': 'failed',
-                'repository_id': '42',
-            }
-        ],
-    )
 
     rows = mod.delivery_rows(
-        {'github_delivery': ['123', guid]},
+        {'github_delivery': ['123', '456']},
+        'jwt-token',
+    )
+
+    assert [row['id'] for row in rows] == ['123', '456']
+
+
+def test_delivery_rows_resolves_splunk_delivery_guid(monkeypatch, aws):
+    mod = _load_worker(monkeypatch)
+    guid = '9fff76f0-77ed-11f1-910c-57c17856fa99'
+    calls = []
+
+    def _resolve(jwt, guids, installation_id, api_url, api_version):
+        calls.append((jwt, guids, installation_id, api_url, api_version))
+        return [mod.delivery_row_from_id('123456')]
+
+    monkeypatch.setattr(mod, 'resolve_delivery_guid_rows', _resolve)
+
+    rows = mod.delivery_rows(
+        {'github_delivery': guid},
         'jwt-token',
         'https://api.github.test',
         '2022-11-28',
         'installation-1',
     )
 
-    assert [row['id'] for row in rows] == ['123', '99']
-    assert rows[0]['event'] == 'explicit-id'
-    assert rows[1]['guid'] == guid
-
-
-def test_next_cursor_from_link_header(monkeypatch, aws):
-    mod = _load_worker(monkeypatch)
-
-    assert mod.next_cursor_from_headers({
-        'link': (
-            '<https://api.github.test/app/hook/deliveries?cursor=abc>; '
-            'rel="next"'
+    assert [row['id'] for row in rows] == ['123456']
+    assert calls == [
+        (
+            'jwt-token',
+            [guid],
+            'installation-1',
+            'https://api.github.test',
+            '2022-11-28',
         ),
-    }) == 'abc'
-    assert mod.next_cursor_from_headers({'link': '<x>; rel="last"'}) == ''
+    ]
 
 
 def test_resolve_tenant_config_uses_matching_tenant_and_region(
@@ -199,8 +274,8 @@ def test_resolve_delivery_guid_rows_pages_and_filters_installation(
     monkeypatch, aws
 ):
     mod = _load_worker(monkeypatch)
-    first_guid = 'f1234567-89ab-4cde-8123-456789abcdef'
-    second_guid = 'e1234567-89ab-4cde-8123-456789abcdef'
+    first_guid = '9fff76f0-77ed-11f1-910c-57c17856fa99'
+    second_guid = '9ffedab0-77ed-11f1-9fd6-73ef58d799b3'
     calls = []
 
     def _github_request(_jwt, method, path, **_kwargs):
@@ -220,26 +295,14 @@ def test_resolve_delivery_guid_rows_pages_and_filters_installation(
                 {
                     'id': '12',
                     'guid': first_guid,
-                    'installation_id': 'install-1',
-                    'event': 'workflow_job',
-                    'action': 'queued',
-                    'delivered_at': '2026-07-03T00:00:00Z',
-                    'status_code': 500,
-                    'status': 'failed',
-                    'repository_id': 42,
+                    'installation_id': 'installation-1',
                 },
             ]).encode()
         return 200, {}, json.dumps([
             {
                 'id': '13',
                 'guid': second_guid,
-                'installation_id': 'install-1',
-                'event': 'workflow_job',
-                'action': 'in_progress',
-                'delivered_at': '2026-07-03T00:01:00Z',
-                'status_code': 500,
-                'status': 'failed',
-                'repository_id': 42,
+                'installation_id': 'installation-1',
             },
         ]).encode()
 
@@ -248,7 +311,7 @@ def test_resolve_delivery_guid_rows_pages_and_filters_installation(
     rows = mod.resolve_delivery_guid_rows(
         'jwt-token',
         [first_guid, second_guid],
-        'install-1',
+        'installation-1',
         'https://api.github.test',
         '2022-11-28',
     )
