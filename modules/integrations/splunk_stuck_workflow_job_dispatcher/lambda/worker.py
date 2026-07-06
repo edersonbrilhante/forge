@@ -1,12 +1,9 @@
 import base64
-import hashlib
 import json
 import logging
 import os
 import re
 import time
-import urllib.error
-import urllib.request
 from decimal import Decimal
 from typing import Any, Dict, Iterable, List, Tuple
 
@@ -21,77 +18,12 @@ LOG.setLevel(getattr(logging, os.environ.get(
 dynamodb = boto3.client('dynamodb')
 deserializer = TypeDeserializer()
 tenant_configs_cache: List[Dict[str, Any]] | None = None
-
 DELIVERY_GUID_RE = re.compile(
     r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$',
     re.IGNORECASE,
 )
 MAX_DELIVERIES = 5000
 PER_PAGE = 100
-SHA256_DIGESTINFO_PREFIX = bytes.fromhex(
-    '3031300d060960864801650304020105000420')
-
-
-class DerReader:
-    def __init__(self, data: bytes):
-        self.data = data
-        self.pos = 0
-
-    def eof(self) -> bool:
-        return self.pos >= len(self.data)
-
-    def peek_tag(self) -> int:
-        if self.eof():
-            raise ValueError('Unexpected end of DER data')
-        return self.data[self.pos]
-
-    def read_tlv(self) -> Tuple[int, bytes]:
-        if self.eof():
-            raise ValueError('Unexpected end of DER data')
-
-        tag = self.data[self.pos]
-        self.pos += 1
-        if self.eof():
-            raise ValueError('Missing DER length')
-
-        length_octet = self.data[self.pos]
-        self.pos += 1
-        if length_octet & 0x80:
-            length_octets = length_octet & 0x7F
-            if length_octets == 0:
-                raise ValueError('Indefinite DER length is not supported')
-            if self.pos + length_octets > len(self.data):
-                raise ValueError('DER length exceeds input')
-            length = int.from_bytes(
-                self.data[self.pos:self.pos + length_octets], 'big')
-            self.pos += length_octets
-        else:
-            length = length_octet
-
-        if self.pos + length > len(self.data):
-            raise ValueError('DER value exceeds input')
-
-        value = self.data[self.pos:self.pos + length]
-        self.pos += length
-        return tag, value
-
-    def read_sequence(self) -> 'DerReader':
-        tag, value = self.read_tlv()
-        if tag != 0x30:
-            raise ValueError(f"Expected DER SEQUENCE, got tag 0x{tag:02x}")
-        return DerReader(value)
-
-    def read_integer(self) -> int:
-        tag, value = self.read_tlv()
-        if tag != 0x02:
-            raise ValueError(f"Expected DER INTEGER, got tag 0x{tag:02x}")
-        return int.from_bytes(value.lstrip(b'\x00') or b'\x00', 'big')
-
-    def read_octet_string(self) -> bytes:
-        tag, value = self.read_tlv()
-        if tag != 0x04:
-            raise ValueError(f"Expected DER OCTET STRING, got tag 0x{tag:02x}")
-        return value
 
 
 def json_default(value: Any) -> Any:
@@ -100,86 +32,36 @@ def json_default(value: Any) -> Any:
     raise TypeError(f"Unsupported JSON value: {type(value).__name__}")
 
 
-def b64url(data: bytes) -> str:
-    return base64.urlsafe_b64encode(data).rstrip(b'=').decode('ascii')
-
-
 def normalize_parameter_value(value: str) -> str:
     return value.strip().strip("'\"")
 
 
-def pem_to_der(raw_key: str) -> bytes:
+def normalize_private_key(raw_key: str) -> Any:
     key_text = raw_key.replace('\\n', '\n').strip()
-    if 'BEGIN' not in key_text:
-        compact = re.sub(r'\s+', '', key_text)
-        decoded = base64.b64decode(compact)
-        if b'BEGIN' in decoded:
-            key_text = decoded.decode('utf-8').replace('\\n', '\n').strip()
-        else:
-            return decoded
+    if 'BEGIN' in key_text:
+        return key_text
 
-    lines = [
-        line.strip()
-        for line in key_text.splitlines()
-        if line.strip() and not line.startswith('-----')
-    ]
-    return base64.b64decode(''.join(lines))
+    decoded = base64.b64decode(re.sub(r'\s+', '', key_text), validate=True)
+    if b'BEGIN' in decoded:
+        return decoded.decode('utf-8').replace('\\n', '\n').strip()
+
+    from cryptography.hazmat.primitives import serialization
+
+    return serialization.load_der_private_key(decoded, password=None)
 
 
-def parse_rsa_private_key(raw_key: str) -> Tuple[int, int]:
-    der = pem_to_der(raw_key)
-    sequence = DerReader(der).read_sequence()
-    sequence.read_integer()
+def create_github_app_jwt(issuer: str, private_key: Any) -> str:
+    import jwt
 
-    next_tag = sequence.peek_tag()
-    if next_tag == 0x30:
-        sequence.read_tlv()
-        private_key_der = sequence.read_octet_string()
-        return parse_rsa_private_key_from_pkcs1(private_key_der)
-    if next_tag == 0x02:
-        return parse_rsa_private_key_from_sequence(sequence)
-
-    raise ValueError(f"Unsupported private key DER tag 0x{next_tag:02x}")
-
-
-def parse_rsa_private_key_from_pkcs1(der: bytes) -> Tuple[int, int]:
-    sequence = DerReader(der).read_sequence()
-    sequence.read_integer()
-    return parse_rsa_private_key_from_sequence(sequence)
-
-
-def parse_rsa_private_key_from_sequence(sequence: DerReader) -> Tuple[int, int]:
-    modulus = sequence.read_integer()
-    sequence.read_integer()
-    private_exponent = sequence.read_integer()
-    return modulus, private_exponent
-
-
-def rsa_sha256_sign(private_key: Tuple[int, int], message: bytes) -> bytes:
-    modulus, private_exponent = private_key
-    key_size = (modulus.bit_length() + 7) // 8
-    digest = hashlib.sha256(message).digest()
-    digest_info = SHA256_DIGESTINFO_PREFIX + digest
-    padding_length = key_size - len(digest_info) - 3
-    if padding_length < 8:
-        raise ValueError('RSA key is too small for SHA-256 signature')
-    encoded = b'\x00\x01' + (b'\xff' * padding_length) + b'\x00' + digest_info
-    signature = pow(int.from_bytes(encoded, 'big'), private_exponent, modulus)
-    return signature.to_bytes(key_size, 'big')
-
-
-def create_github_app_jwt(issuer: str, private_key: Tuple[int, int]) -> str:
     now = int(time.time())
-    header = b64url(b'{"typ":"JWT","alg":"RS256"}')
-    payload = b64url(
-        json.dumps(
-            {'iat': now - 60, 'exp': now + 540, 'iss': issuer},
-            separators=(',', ':'),
-        ).encode('utf-8')
+    token = jwt.encode(
+        {'iat': now - 60, 'exp': now + 540, 'iss': issuer},
+        private_key,
+        algorithm='RS256',
     )
-    signing_input = f"{header}.{payload}".encode('ascii')
-    signature = b64url(rsa_sha256_sign(private_key, signing_input))
-    return f"{header}.{payload}.{signature}"
+    if isinstance(token, bytes):
+        token = token.decode('ascii')
+    return token
 
 
 def github_request(
@@ -190,11 +72,12 @@ def github_request(
     api_url: str | None = None,
     api_version: str | None = None,
 ) -> Tuple[int, Dict[str, str], bytes]:
+    import requests
+
     resolved_api_url = (api_url or 'https://api.github.com').rstrip('/')
     resolved_api_version = (
         '2022-11-28' if api_version is None else api_version
     )
-    data = json.dumps(body).encode('utf-8') if body is not None else None
     headers = {
         'Accept': 'application/vnd.github+json',
         'Authorization': f"Bearer {jwt}",
@@ -204,21 +87,15 @@ def github_request(
     if resolved_api_version:
         headers['X-GitHub-Api-Version'] = resolved_api_version
 
-    request = urllib.request.Request(
+    response = requests.request(
+        method,
         f"{resolved_api_url}{path}",
-        data=data,
         headers=headers,
-        method=method,
+        json=body,
+        timeout=30,
     )
-
-    try:
-        with urllib.request.urlopen(request, timeout=30) as response:
-            headers = {key.lower(): value for key,
-                       value in response.headers.items()}
-            return response.status, headers, response.read()
-    except urllib.error.HTTPError as err:
-        headers = {key.lower(): value for key, value in err.headers.items()}
-        return err.code, headers, err.read()
+    headers = {key.lower(): value for key, value in response.headers.items()}
+    return response.status_code, headers, response.content
 
 
 def load_tenant_configs() -> List[Dict[str, Any]]:
@@ -349,7 +226,7 @@ def load_github_app_credentials(payload: Dict[str, Any]) -> Dict[str, Any]:
     )
     return {
         'issuer': issuer,
-        'private_key': parse_rsa_private_key(raw_key),
+        'private_key': normalize_private_key(raw_key),
         'github_api_url': tenant_config['github_api_url'],
         'github_api_version': tenant_config['github_api_version'],
         'installation_id': installation_id,
@@ -387,42 +264,14 @@ def normalize_delivery_references(
             delivery_guids.append(delivery_guid)
             continue
 
-        raise ValueError(f"Invalid delivery ID/GUID: {delivery_reference}")
+        raise ValueError(
+            f"Invalid GitHub delivery reference: {delivery_reference}")
 
     return numeric_delivery_ids, delivery_guids
 
 
 def delivery_row_from_id(delivery_id: str) -> Dict[str, Any]:
-    return {
-        'id': delivery_id,
-        'guid': '-',
-        'event': 'explicit-id',
-        'action': '-',
-        'delivered_at': '-',
-        'status_code': '-',
-        'status': '-',
-        'repository_id': '-',
-    }
-
-
-def delivery_row_from_github_delivery(
-    delivery: Dict[str, Any],
-) -> Dict[str, Any]:
-    delivery_id = str(delivery.get('id') or '').strip()
-    if not re.fullmatch(r'\d+', delivery_id):
-        raise ValueError(
-            f"Resolved GitHub delivery has invalid numeric ID: {delivery_id}")
-
-    return {
-        'id': delivery_id,
-        'guid': str(delivery.get('guid') or '-'),
-        'event': str(delivery.get('event') or '-'),
-        'action': str(delivery.get('action') or '-'),
-        'delivered_at': str(delivery.get('delivered_at') or '-'),
-        'status_code': str(delivery.get('status_code') or '-'),
-        'status': str(delivery.get('status') or '-'),
-        'repository_id': str(delivery.get('repository_id') or '-'),
-    }
+    return {'id': delivery_id}
 
 
 def next_cursor_from_headers(headers: Dict[str, str]) -> str:
@@ -482,8 +331,12 @@ def resolve_delivery_guid_rows(
                 delivery.get('installation_id') or '')
             if installation_id and delivery_installation_id != installation_id:
                 continue
+            delivery_id = str(delivery.get('id') or '').strip()
+            if not re.fullmatch(r'\d+', delivery_id):
+                raise ValueError(
+                    f"Resolved GitHub delivery has invalid numeric ID: {delivery_id}")
 
-            rows.append(delivery_row_from_github_delivery(delivery))
+            rows.append(delivery_row_from_id(delivery_id))
             remaining_guids.remove(delivery_guid)
 
         if not deliveries or len(delivery_page) < len(deliveries):
@@ -520,14 +373,14 @@ def delivery_rows(
     api_version: str | None = None,
     installation_id: str = '',
 ) -> List[Dict[str, Any]]:
-    numeric_delivery_ids, delivery_guids = normalize_delivery_references(
+    delivery_ids, delivery_guids = normalize_delivery_references(
         payload.get('github_delivery') or [])
-    if not numeric_delivery_ids and not delivery_guids:
+    if not delivery_ids and not delivery_guids:
         raise ValueError('No github_delivery provided by Splunk')
 
     rows = [
         delivery_row_from_id(delivery_id)
-        for delivery_id in numeric_delivery_ids
+        for delivery_id in delivery_ids
     ]
     if delivery_guids:
         rows.extend(resolve_delivery_guid_rows(
@@ -539,12 +392,6 @@ def delivery_rows(
         ))
 
     return rows
-
-
-def format_event_action(row: Dict[str, Any]) -> str:
-    if row.get('action') in {'', '-'}:
-        return str(row.get('event') or '-')
-    return f"{row.get('event')}.{row.get('action')}"
 
 
 def redeliver_delivery(
@@ -580,16 +427,9 @@ def process_rows(
 
     for index, row in enumerate(rows):
         LOG.info(
-            '%s tenant=%s delivery_id=%s guid=%s event=%s delivered_at=%s status=%s status_code=%s repository_id=%s',
-            'redelivery_execute',
+            'redelivery_execute tenant=%s delivery_id=%s',
             tenant,
             row.get('id'),
-            row.get('guid'),
-            format_event_action(row),
-            row.get('delivered_at'),
-            row.get('status'),
-            row.get('status_code'),
-            row.get('repository_id'),
         )
 
         if index == 0:
