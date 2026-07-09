@@ -197,10 +197,7 @@
                 "pypi"
             ],
             "matchFileNames": [
-                ".docker/forge-github-app-register/requirements.txt",
-                "pyproject.toml",
-                "requirements*.txt",
-                "tests/smoke/requirements-dev.txt"
+                "pyproject.toml"
             ],
             "groupName": "Python dependencies",
             "groupSlug": "python-dependencies",
