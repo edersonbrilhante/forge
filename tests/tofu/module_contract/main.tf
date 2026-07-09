@@ -1,5 +1,5 @@
 terraform {
-  required_version = ">= 1.11.11"
+  required_version = "~> 1.11"
 }
 
 variable "module_path" {
