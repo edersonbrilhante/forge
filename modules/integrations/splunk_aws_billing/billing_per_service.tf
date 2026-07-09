@@ -54,6 +54,8 @@ module "cur_per_service" {
   s3_object_tags      = var.default_tags
   s3_bucket           = aws_s3_bucket.aws_billing_report.id
   s3_prefix           = "lambda/billing_per_service"
+
+  depends_on = [aws_cloudwatch_log_group.cur_per_service]
 }
 
 resource "aws_lambda_permission" "cur_per_service" {
@@ -117,4 +119,11 @@ resource "aws_bcmdataexports_export" "cur_per_service" {
     }
   }
   tags = local.all_security_tags
+
+  # See billing_per_resource.tf for the full explanation; same upstream bug
+  # (hashicorp/terraform-provider-aws#48807, PR #48809). Remove the lifecycle
+  # block once the provider fix ships and versions.tf pins to a fixed version.
+  lifecycle {
+    ignore_changes = [export[0].data_query[0].table_configurations]
+  }
 }

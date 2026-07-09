@@ -53,6 +53,8 @@ module "cur_per_resource" {
   s3_object_tags      = var.default_tags
   s3_bucket           = aws_s3_bucket.aws_billing_report.id
   s3_prefix           = "lambda/billing_per_resource"
+
+  depends_on = [aws_cloudwatch_log_group.cur_per_resource]
 }
 
 resource "aws_lambda_permission" "cur_per_resource" {
@@ -117,4 +119,20 @@ resource "aws_bcmdataexports_export" "cur_per_resource" {
     }
   }
   tags = local.all_security_tags
+
+  # AWS BCM Data Exports API silently injects BILLING_VIEW_ARN (and other keys
+  # like INCLUDE_MANUAL_DISCOUNT_COMPATIBILITY) into the response, which the
+  # AWS provider then reports as drift. Suppress the diff until the upstream
+  # fix ships.
+  #
+  # NOTE: this does NOT prevent the initial-create failure caused by the same
+  # bug ("Provider produced inconsistent result after apply"). On first apply,
+  # the export is created in AWS but state save fails; recover with
+  # `tofu import aws_bcmdataexports_export.cur_per_resource <arn>` and re-apply.
+  #
+  # Remove this lifecycle block once hashicorp/terraform-provider-aws#48807
+  # is fixed (PR #48809) and the released provider is picked up in versions.tf.
+  lifecycle {
+    ignore_changes = [export[0].data_query[0].table_configurations]
+  }
 }

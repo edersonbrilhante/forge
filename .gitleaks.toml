@@ -1,0 +1,13 @@
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Generated local test artifacts are excluded; source files remain scanned."
+paths = [
+  '''(^|/)__pycache__/''',
+  '''(^|/)\.terraform/''',
+  '''^tests/\.hypothesis/''',
+  '''^tests/\.pytest_cache/''',
+  '''^tests/coverage\.xml$''',
+  '''^tests/pytest-results\.xml$''',
+]

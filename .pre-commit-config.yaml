@@ -145,7 +145,7 @@ repos:
   # Makefile Hooks
   # ---------------------
   - repo: https://github.com/mrtazz/checkmake.git
-    rev: 446732014beed209cff787b0c397a3d9f905424e  # frozen: v0.3.0
+    rev: 59931d556f8f5cf4fbacf2c8390a8122ef7a881d  # frozen: v0.3.2
     hooks:
       - id: checkmake
         name: Makefile · Lint Makefile
@@ -242,8 +242,10 @@ repos:
       - id: terraform_tflint
         name: Terraform · Linter
         always_run: true
-        args: [--hook-config=--tf-path=tofu]
-        exclude: (modules/integrations/splunk_cloud_data_manager|modules/helpers/forge_subscription|modules/integrations/splunk_secrets/|modules/integrations/splunk_cloud_s3_runner_logs/)
+        args:
+          - --hook-config=--tf-path=tofu
+          - --args=--disable-rule=terraform_required_providers
+        exclude: (modules/helpers/forge_subscription|modules/integrations/splunk_secrets/|modules/integrations/splunk_cloud_s3_runner_logs/)
       - id: terraform_validate
         name: Terraform · Validate
         always_run: true
@@ -252,18 +254,51 @@ repos:
           - --tf-init-args=-backend=false
           - --tf-init-args=--upgrade=true
           - --hook-config=--tf-path=tofu
-          - --hook-config=--parallelism-limit=1
         exclude: (modules/integrations/splunk_cloud_data_manager|modules/integrations/splunk_cloud_s3_runner_logs)
 
   # ---------------------
   # Security Hooks
   # ---------------------
   - repo: https://github.com/gitleaks/gitleaks
-    rev: 2ca41cc1372d1e939a6a879f18cdc19fc1cac1ce  # frozen: v8.30.0
+    rev: 83d9cd684c87d95d656c1458ef04895a7f1cbd8e  # frozen: v8.30.1
     hooks:
       - id: gitleaks
         name: Security · Gitleaks
+        entry: gitleaks detect --source . --config .gitleaks.toml --redact --verbose --no-git
         always_run: true
+        pass_filenames: false
+
+  - repo: https://github.com/PyCQA/bandit
+    rev: 92ae8b82fb422a639f0ed8d99e96cea769594e08  # frozen: 1.9.4
+    hooks:
+      - id: bandit
+        name: Security · Bandit
+        args:
+          - -q
+          - -r
+          - modules
+          - tests
+          - -x
+          - '*/__pycache__/*,*/.terraform/*,*/.hypothesis/*,*/.pytest_cache/*'
+          - -lll
+          - -iii
+        always_run: true
+        pass_filenames: false
+
+  - repo: https://github.com/pypa/pip-audit
+    rev: 8894eb8cee033531a1fbd9f2fb160892531c14e3  # frozen: v2.10.1
+    hooks:
+      - id: pip-audit
+        name: Security · pip-audit
+        entry: >-
+          bash -c 'set -euo pipefail; req="$(mktemp)";
+          trap "rm -f \"$req\"" EXIT;
+          uv export --project . --locked --only-group lambda-tests --format requirements-txt --no-hashes > "$req";
+          pip-audit -r "$req" --strict --no-deps --disable-pip'
+        additional_dependencies:
+          - uv==0.11.26
+        always_run: true
+        pass_filenames: false
 
   # ---------------------
   # Ansible Hooks
