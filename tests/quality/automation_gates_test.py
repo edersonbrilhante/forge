@@ -17,6 +17,18 @@ def is_terraform_module(path: Path) -> bool:
     return any(path.glob('*.tf'))
 
 
+def contains_module_interface_contract(path: Path) -> bool:
+    source = path.read_text(encoding='utf-8')
+    return path.name.endswith('.tftest.hcl') and 'tests/tofu/module_interface_contract' in source
+
+
+def is_module_interface_contract(path: Path) -> bool:
+    has_interface_suffix = path.name.endswith(
+        '_interface_contract.tftest.hcl',
+    )
+    return has_interface_suffix and contains_module_interface_contract(path)
+
+
 def dependency_group_names(group_name: str) -> set[str]:
     data = tomllib.loads(read('pyproject.toml'))
     dependencies = data['dependency-groups'][group_name]
@@ -57,6 +69,50 @@ def test_each_module_has_specific_native_test_file() -> None:
 
     assert missing_tests == []
     assert generic_tests == []
+
+
+def test_each_module_has_one_interface_contract() -> None:
+    modules = sorted(
+        path
+        for path in (REPO_ROOT / 'modules').rglob('*')
+        if is_terraform_module(path)
+    )
+
+    missing_interface_tests = []
+    misnamed_interface_tests = []
+    duplicate_interface_tests = []
+    for module in modules:
+        tests_dir = module / 'tests'
+        tests = sorted(tests_dir.glob('*.tftest.hcl')
+                       ) if tests_dir.exists() else []
+        misnamed_interface_tests.extend(
+            test_file.relative_to(REPO_ROOT).as_posix()
+            for test_file in tests
+            if contains_module_interface_contract(test_file)
+            if not test_file.name.endswith('_interface_contract.tftest.hcl')
+        )
+        interface_tests = (
+            sorted(
+                test_file
+                for test_file in tests
+                if is_module_interface_contract(test_file)
+            )
+        )
+        if not interface_tests:
+            missing_interface_tests.append(
+                module.relative_to(REPO_ROOT).as_posix(),
+            )
+        elif len(interface_tests) > 1:
+            module_path = module.relative_to(REPO_ROOT).as_posix()
+            test_paths = ', '.join(
+                test_file.relative_to(REPO_ROOT).as_posix()
+                for test_file in interface_tests
+            )
+            duplicate_interface_tests.append(f'{module_path}: {test_paths}')
+
+    assert missing_interface_tests == []
+    assert misnamed_interface_tests == []
+    assert duplicate_interface_tests == []
 
 
 def test_pre_commit_covers_security_sca_and_secrets() -> None:
