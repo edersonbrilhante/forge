@@ -1,4 +1,4 @@
-run "integrations_github_webhook_relay_destination_receivers_contract" {
+run "integrations_splunk_cloud_data_manager_common_contract" {
   command = plan
 
   module {
@@ -8,11 +8,15 @@ run "integrations_github_webhook_relay_destination_receivers_contract" {
   variables {
     module_path = "."
     expected_literals = [
-      "module \"webhook_relay_destination\"",
-      "module \"webex_webhook_relay\"",
+      "resource \"aws_iam_role\" \"splunk_dm_read_only\"",
+      "resource \"aws_iam_role_policy\" \"splunk_dm_policy_attachment\"",
       "data \"aws_caller_identity\" \"current\"",
-      "output \"role_arn\"",
-      "output \"webhook\"",
+      "data \"aws_iam_policy_document\" \"splunk_dm_policy\"",
+      "data \"aws_secretsmanager_secret\" \"secrets\"",
+      "data \"aws_secretsmanager_secret_version\" \"secrets\"",
+      "data \"external\" \"splunk_data\"",
+      "data \"external\" \"config\"",
+      "provider \"aws\"",
     ]
   }
 

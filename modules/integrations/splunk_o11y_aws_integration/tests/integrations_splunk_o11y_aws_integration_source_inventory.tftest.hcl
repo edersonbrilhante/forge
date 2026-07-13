@@ -1,4 +1,4 @@
-run "integrations_splunk_secrets_contract" {
+run "integrations_splunk_o11y_aws_integration_contract" {
   command = plan
 
   module {
@@ -8,12 +8,10 @@ run "integrations_splunk_secrets_contract" {
   variables {
     module_path = "."
     expected_literals = [
-      "resource \"aws_kms_key\" \"regional\"",
-      "resource \"aws_kms_alias\" \"regional_alias\"",
-      "resource \"aws_secretsmanager_secret\" \"cicd_secrets\"",
-      "resource \"time_sleep\" \"wait_60_seconds\"",
-      "resource \"aws_secretsmanager_secret_version\" \"cicd_secrets\"",
-      "data \"aws_secretsmanager_random_password\" \"secret_seeds\"",
+      "resource \"aws_cloudformation_stack\" \"splunk_integration\"",
+      "data \"aws_secretsmanager_secret\" \"secrets\"",
+      "data \"aws_secretsmanager_secret_version\" \"secrets\"",
+      "provider \"aws\"",
     ]
   }
 

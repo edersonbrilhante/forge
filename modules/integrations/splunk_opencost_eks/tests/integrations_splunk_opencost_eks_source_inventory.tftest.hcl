@@ -1,4 +1,4 @@
-run "platform_arc_contract" {
+run "integrations_splunk_opencost_eks_contract" {
   command = plan
 
   module {
@@ -8,19 +8,21 @@ run "platform_arc_contract" {
   variables {
     module_path = "."
     expected_literals = [
-      "module \"controller\"",
-      "module \"scale_sets\"",
-      "resource \"null_resource\" \"apply_ec2_node_class\"",
-      "resource \"null_resource\" \"apply_node_pool\"",
-      "resource \"kubernetes_manifest\" \"storage_class\"",
+      "resource \"helm_release\" \"managed_prometheus\"",
+      "resource \"helm_release\" \"opencost\"",
       "data \"aws_eks_cluster\" \"cluster\"",
       "data \"aws_eks_cluster_auth\" \"cluster\"",
-      "data \"aws_subnet\" \"eks_subnets\"",
-      "data \"aws_iam_openid_connect_provider\" \"cluster\"",
-      "data \"external\" \"update_kubeconfig\"",
-      "data \"external\" \"karpenter_ec2nodeclass\"",
-      "output \"runners_map\"",
-      "output \"subnet_cidr_blocks\"",
+      "output \"namespace\"",
+      "output \"release_name\"",
+      "output \"service_name\"",
+      "output \"service_account_name\"",
+      "output \"metrics_endpoint\"",
+      "output \"metrics_host\"",
+      "output \"metrics_port\"",
+      "output \"metrics_path\"",
+      "output \"prometheus_endpoint\"",
+      "provider \"aws\"",
+      "provider \"helm\"",
     ]
   }
 

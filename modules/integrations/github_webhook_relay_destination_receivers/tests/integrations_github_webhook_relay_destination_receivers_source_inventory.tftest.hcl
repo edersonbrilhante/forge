@@ -1,4 +1,4 @@
-run "integrations_splunk_o11y_aws_integration_contract" {
+run "integrations_github_webhook_relay_destination_receivers_contract" {
   command = plan
 
   module {
@@ -8,9 +8,12 @@ run "integrations_splunk_o11y_aws_integration_contract" {
   variables {
     module_path = "."
     expected_literals = [
-      "resource \"aws_cloudformation_stack\" \"splunk_integration\"",
-      "data \"aws_secretsmanager_secret\" \"secrets\"",
-      "data \"aws_secretsmanager_secret_version\" \"secrets\"",
+      "module \"webhook_relay_destination\"",
+      "module \"webex_webhook_relay\"",
+      "data \"aws_caller_identity\" \"current\"",
+      "output \"role_arn\"",
+      "output \"webhook\"",
+      "provider \"aws\"",
     ]
   }
 

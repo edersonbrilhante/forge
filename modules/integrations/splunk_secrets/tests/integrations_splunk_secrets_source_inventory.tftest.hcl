@@ -1,4 +1,4 @@
-run "integrations_splunk_cloud_data_manager_common_contract" {
+run "integrations_splunk_secrets_contract" {
   command = plan
 
   module {
@@ -8,14 +8,13 @@ run "integrations_splunk_cloud_data_manager_common_contract" {
   variables {
     module_path = "."
     expected_literals = [
-      "resource \"aws_iam_role\" \"splunk_dm_read_only\"",
-      "resource \"aws_iam_role_policy\" \"splunk_dm_policy_attachment\"",
-      "data \"aws_caller_identity\" \"current\"",
-      "data \"aws_iam_policy_document\" \"splunk_dm_policy\"",
-      "data \"aws_secretsmanager_secret\" \"secrets\"",
-      "data \"aws_secretsmanager_secret_version\" \"secrets\"",
-      "data \"external\" \"splunk_data\"",
-      "data \"external\" \"config\"",
+      "resource \"aws_kms_key\" \"regional\"",
+      "resource \"aws_kms_alias\" \"regional_alias\"",
+      "resource \"aws_secretsmanager_secret\" \"cicd_secrets\"",
+      "resource \"time_sleep\" \"wait_60_seconds\"",
+      "resource \"aws_secretsmanager_secret_version\" \"cicd_secrets\"",
+      "data \"aws_secretsmanager_random_password\" \"secret_seeds\"",
+      "provider \"aws\"",
     ]
   }
 
