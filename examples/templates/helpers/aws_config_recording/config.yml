@@ -1,0 +1,4 @@
+---
+recorded_resource_types:
+  - AWS::EC2::Host
+  - AWS::EC2::Instance
