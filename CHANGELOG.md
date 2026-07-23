@@ -1,5 +1,34 @@
 # Changelog
 
+## [4.3.0](https://github.com/cisco-open/forge/compare/v4.2.1...v4.3.0) (2026-07-23)
+
+
+### Features
+
+* **runners:** allow per-runner Lambda batch tuning ([#493](https://github.com/cisco-open/forge/issues/493)) ([3ae2625](https://github.com/cisco-open/forge/commit/3ae2625c15d842539a4bbf42a1d4b181c4407f38))
+* **runners:** allow per-runner queue redrive tuning ([#495](https://github.com/cisco-open/forge/issues/495)) ([89beed4](https://github.com/cisco-open/forge/commit/89beed4c069ecced358dcf7a1ccf5be77699b8fb))
+
+## [4.2.1](https://github.com/cisco-open/forge/compare/v4.2.0...v4.2.1) (2026-07-22)
+
+
+### Bug Fixes
+
+* **lambda:** prevent recurring deployment plans ([#489](https://github.com/cisco-open/forge/issues/489)) ([0549365](https://github.com/cisco-open/forge/commit/0549365de85f0de8057e14cbc2a11f726c9a081b))
+
+## [4.2.0](https://github.com/cisco-open/forge/compare/v4.1.2...v4.2.0) (2026-07-22)
+
+
+### Features
+
+* **runners:** expose runner label maps ([#487](https://github.com/cisco-open/forge/issues/487)) ([294adca](https://github.com/cisco-open/forge/commit/294adca9a4886405bd446cf86a2737b484737595))
+
+## [4.1.2](https://github.com/cisco-open/forge/compare/v4.1.1...v4.1.2) (2026-07-21)
+
+
+### Bug Fixes
+
+* **forge-runners:** make GitHub App webhook updates retryable ([#484](https://github.com/cisco-open/forge/issues/484)) ([e3ab1e3](https://github.com/cisco-open/forge/commit/e3ab1e3b1408d31bfd3913c5f22022d85ac950fb))
+
 ## [4.1.1](https://github.com/cisco-open/forge/compare/v4.1.0...v4.1.1) (2026-07-20)
 
 

@@ -143,6 +143,24 @@ def assert_contains_all(text: str, expected: Iterable[str]) -> None:
     assert not missing, f'missing expected Terraform contract text: {missing}'
 
 
+@pytest.mark.parametrize(
+    'filename',
+    [
+        'billing_per_resource_process.tf',
+        'billing_per_resource.tf',
+        'billing_per_service.tf',
+    ],
+)
+def test_splunk_aws_billing_packages_ignore_artifact_timestamps(
+    filename: str,
+) -> None:
+    module_tf = read_repo_file(
+        f'modules/integrations/splunk_aws_billing/{filename}'
+    )
+
+    assert 'trigger_on_package_timestamp = false' in module_tf
+
+
 def test_job_log_pipeline_wires_runtime_env_and_event_contract() -> None:
     dispatcher_tf = read_repo_file(
         'modules/platform/forge_runners/github_actions_job_logs/'
@@ -314,7 +332,10 @@ def test_splunk_stuck_dispatcher_worker_contract_is_offline_and_scoped() -> None
             'values   = ["ssm.*.amazonaws.com"]',
         ],
     )
-    assert 'type  = "String"' in tenant_configs_tf
+    assert 'type           = "String"' in tenant_configs_tf
+    assert 'insecure_value = each.value' in tenant_configs_tf
+    assert 'depends_on = [aws_cloudwatch_log_group.worker]' in worker_module
+    assert 'aws_ssm_parameter.tenant_configs' not in worker_module
 
 
 def test_redrive_deadletter_policy_scope_is_configured_from_sqs_map() -> None:
