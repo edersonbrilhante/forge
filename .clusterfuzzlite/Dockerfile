@@ -1,4 +1,4 @@
-FROM gcr.io/oss-fuzz-base/base-builder-python:v1@sha256:6a6927b54c4cfd5de1bf4aa638d8db5d94a3c442fa9282b6cf864396c5ba23d1
+FROM gcr.io/oss-fuzz-base/base-builder-python:v1@sha256:bfd6d19416d9f7a791857d3f5746bc9050138a1843aa7e98b617469d8d631bab
 
 RUN pip3 install --no-cache-dir \
     boto3==1.43.40 \
