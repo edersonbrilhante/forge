@@ -222,30 +222,9 @@ variable "dashboard_variables" {
         }
       ))
     })
-    kinesis_control_plane = object({
-      dynamic_variables = list(object({
-        property               = string
-        alias                  = string
-        description            = string
-        values                 = list(string)
-        value_required         = bool
-        values_suggested       = list(string)
-        restricted_suggestions = bool
-        }
-      ))
-    })
-    runner_logs_ingestion = object({
-      dynamic_variables = list(object({
-        property               = string
-        alias                  = string
-        description            = string
-        values                 = list(string)
-        value_required         = bool
-        values_suggested       = list(string)
-        restricted_suggestions = bool
-        }
-      ))
-    })
+    metric_ingest = optional(object({
+      token_ids = optional(list(string), [])
+    }), {})
     sqs_control_plane = object({
       dynamic_variables = list(object({
         property               = string
@@ -362,5 +341,15 @@ variable "dashboard_variables" {
       )) == 0
     )
     error_message = "Every Kubernetes and EC2 runner tenant must have a tenant health detector."
+  }
+
+  validation {
+    condition = (
+      length(distinct(var.dashboard_variables.metric_ingest.token_ids)) == length(var.dashboard_variables.metric_ingest.token_ids)
+      && alltrue([
+        for token_id in var.dashboard_variables.metric_ingest.token_ids : can(regex("^[A-Za-z0-9_-]+$", token_id))
+      ])
+    )
+    error_message = "dashboard_variables.metric_ingest.token_ids must contain distinct Splunk token IDs made only of letters, numbers, underscores, or hyphens."
   }
 }
