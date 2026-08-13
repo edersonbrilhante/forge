@@ -1,5 +1,55 @@
 # Changelog
 
+## [4.14.0](https://github.com/cisco-open/forge/compare/v4.13.2...v4.14.0) (2026-08-13)
+
+
+### Features
+
+* **runners:** adapt nested v2 configuration contract ([#654](https://github.com/cisco-open/forge/issues/654)) ([5b75fd8](https://github.com/cisco-open/forge/commit/5b75fd8ae9439610ad1edc50642848dc58c6fc71))
+
+## [4.13.2](https://github.com/cisco-open/forge/compare/v4.13.1...v4.13.2) (2026-08-13)
+
+
+### Bug Fixes
+
+* ignore acl ([#651](https://github.com/cisco-open/forge/issues/651)) ([e23985e](https://github.com/cisco-open/forge/commit/e23985efd676f392e1f553c9679b22557ee38fd6))
+
+## [4.13.1](https://github.com/cisco-open/forge/compare/v4.13.0...v4.13.1) (2026-08-12)
+
+
+### Bug Fixes
+
+* **splunk:** make Data Manager reconciler names unique ([#647](https://github.com/cisco-open/forge/issues/647)) ([c1fa284](https://github.com/cisco-open/forge/commit/c1fa284afcc13d85a973648852afa8c0300298ec))
+* **splunk:** prevent CloudWatch props ACL recreation ([#648](https://github.com/cisco-open/forge/issues/648)) ([d9a615e](https://github.com/cisco-open/forge/commit/d9a615ed9f81d32f72209927cfe2ff2376b3f5c6))
+
+## [4.13.0](https://github.com/cisco-open/forge/compare/v4.12.0...v4.13.0) (2026-08-11)
+
+
+### Features
+
+* **microvm:** add regional publishing foundation ([#635](https://github.com/cisco-open/forge/issues/635)) ([d9be0f9](https://github.com/cisco-open/forge/commit/d9be0f91922fc0b4c5eaaea83cdb084bc816c0dd))
+* **runners:** adopt nested EC2 provider configuration ([#638](https://github.com/cisco-open/forge/issues/638)) ([5937cf6](https://github.com/cisco-open/forge/commit/5937cf6a7441577b1af49d4f19271894373b1885))
+
+
+### Bug Fixes
+
+* **helpers:** remove License Manager service-linked role ([#642](https://github.com/cisco-open/forge/issues/642)) ([8f08eec](https://github.com/cisco-open/forge/commit/8f08eecd446e97d284349ca0c5c9084213b8a388))
+* **runners:** preserve example pre-install userdata ([#645](https://github.com/cisco-open/forge/issues/645)) ([7f0fd09](https://github.com/cisco-open/forge/commit/7f0fd09e7ee255ff7c8683d0c658294a1669f14c))
+
+## [4.12.0](https://github.com/cisco-open/forge/compare/v4.11.3...v4.12.0) (2026-08-11)
+
+
+### Features
+
+* **splunk:** manage Data Manager Lambda log groups ([#637](https://github.com/cisco-open/forge/issues/637)) ([57d0e6d](https://github.com/cisco-open/forge/commit/57d0e6d81882c3f609c15caa2d5852b259896ce1))
+
+## [4.11.3](https://github.com/cisco-open/forge/compare/v4.11.2...v4.11.3) (2026-08-11)
+
+
+### Bug Fixes
+
+* **splunk:** restore Data Manager delete flow ([#639](https://github.com/cisco-open/forge/issues/639)) ([a451322](https://github.com/cisco-open/forge/commit/a451322baa516313c4ef450c75ea98d06fd04437))
+
 ## [4.11.2](https://github.com/cisco-open/forge/compare/v4.11.1...v4.11.2) (2026-08-06)
 
 

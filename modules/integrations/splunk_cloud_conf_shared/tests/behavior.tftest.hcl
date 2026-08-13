@@ -609,3 +609,74 @@ run "organizes_webhook_health_for_operator_triage" {
     error_message = "The dashboard must order queued-job summary cards, the actionable queue table, relay health, trends, and raw events from top to bottom."
   }
 }
+
+run "seed_cloudwatchlogs_acl_state" {
+  command = apply
+
+  variables {
+    aws_profile  = "test"
+    aws_region   = "us-east-1"
+    default_tags = { Product = "Forge" }
+    splunk_conf = {
+      splunk_cloud = "https://splunk.example.com"
+      index        = "forge-prod-index"
+      tenant_names = ["tenant-a"]
+      acl = {
+        app     = "baseline-app"
+        owner   = "baseline-owner"
+        sharing = "app"
+        read    = ["baseline-reader"]
+        write   = ["baseline-writer"]
+      }
+    }
+    stuck_workflow_job_dispatcher_name_prefix = "forge-dispatcher"
+  }
+}
+
+run "scopes_cloudwatchlogs_acl_drift_ignore" {
+  command = plan
+
+  plan_options {
+    refresh = false
+  }
+
+  variables {
+    aws_profile  = "test"
+    aws_region   = "us-east-1"
+    default_tags = { Product = "Forge" }
+    splunk_conf = {
+      splunk_cloud = "https://splunk.example.com"
+      index        = "forge-prod-index"
+      tenant_names = ["tenant-a"]
+      acl = {
+        app     = "changed-app"
+        owner   = "changed-owner"
+        sharing = "global"
+        read    = ["changed-reader"]
+        write   = ["changed-writer"]
+      }
+    }
+    stuck_workflow_job_dispatcher_name_prefix = "forge-dispatcher"
+  }
+
+  assert {
+    condition = (
+      splunk_configs_conf.forgecicd_cloudwatchlogs.acl[0].app == "baseline-app"
+      && splunk_configs_conf.forgecicd_cloudwatchlogs.acl[0].owner == "baseline-owner"
+      && splunk_configs_conf.forgecicd_cloudwatchlogs.acl[0].read[0] == "baseline-reader"
+      && splunk_configs_conf.forgecicd_cloudwatchlogs.acl[0].write[0] == "baseline-writer"
+    )
+    error_message = "The props/aws:cloudwatchlogs stanza must retain its existing ACL block when replacement-only ACL fields drift."
+  }
+
+  assert {
+    condition = (
+      splunk_configs_conf.forgecicd_cloudwatchlogs_forgecicd.acl[0].app == "changed-app"
+      && splunk_configs_conf.forgecicd_cloudwatchlogs_forgecicd.acl[0].sharing == "global"
+      && splunk_configs_conf.forgecicd_cloudwatchlogs_forgecicd.acl[0].owner == "changed-owner"
+      && splunk_configs_conf.forgecicd_cloudwatchlogs_forgecicd.acl[0].read[0] == "changed-reader"
+      && splunk_configs_conf.forgecicd_cloudwatchlogs_forgecicd.acl[0].write[0] == "changed-writer"
+    )
+    error_message = "The forgecicd CloudWatch Logs stanza must continue to manage every configured ACL field."
+  }
+}

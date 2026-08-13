@@ -14,119 +14,360 @@ variable "ec2_deployment_specs" {
     subnet_ids        = list(string)
     lambda_vpc_id     = string
     vpc_id            = string
-    scale_errors      = optional(list(string), [])
     runner_specs = map(object({
-      ami_filter = object({
-        name  = list(string)
-        state = list(string)
+      tags = optional(map(string), {})
+
+      runner = object({
+        os                     = string
+        architecture           = string
+        boot_time_in_minutes   = optional(number, 5)
+        disable_default_labels = optional(bool, false)
+        extra_labels           = optional(list(string), [])
+        group_name             = optional(string, "Default")
+        name_prefix            = optional(string, "")
+        run_as_root            = optional(bool, false)
+        run_as                 = optional(string, "ec2-user")
+        maximum_count          = number
+        ephemeral              = optional(bool, false)
+        jit_config_enabled     = optional(bool, null)
+        auto_update_disabled   = optional(bool, false)
+        tags                   = optional(map(string), {})
+        hooks = optional(object({
+          job_started   = optional(string, "")
+          job_completed = optional(string, "")
+        }), {})
+        iam = optional(object({
+          role = optional(object({
+            arn = string
+          }), null)
+          managed_policy_arns          = optional(map(string), {})
+          additional_trust_policy_json = optional(string, null)
+          path                         = optional(string, null)
+          permissions_boundary         = optional(string, null)
+        }), {})
       })
-      ami_kms_key_arn                                                = string
-      ami_owners                                                     = list(string)
-      runner_labels                                                  = list(string)
-      runner_os                                                      = string
-      runner_architecture                                            = string
-      extra_labels                                                   = list(string)
-      enable_dynamic_labels                                          = optional(bool, false)
-      aws_dynamic_labels_policy                                      = optional(any, null)
-      lambda_event_source_mapping_batch_size                         = optional(number, 10)
-      lambda_event_source_mapping_maximum_batching_window_in_seconds = optional(number, 0)
-      redrive_build_queue = optional(object({
-        enabled         = optional(bool, true)
-        maxReceiveCount = optional(number, 10)
+
+      github = optional(object({
+        organization_runners = optional(bool, false)
       }), {})
-      max_instances  = number
-      min_run_time   = number
-      instance_types = list(string)
-      license_specifications = optional(list(object({
-        license_configuration_arn = string
-      })), null)
-      placement = optional(object({
-        affinity                = optional(string)
-        availability_zone       = optional(string)
-        group_id                = optional(string)
-        group_name              = optional(string)
-        host_id                 = optional(string)
-        host_resource_group_arn = optional(string)
-        spread_domain           = optional(string)
-        tenancy                 = optional(string)
-        partition_number        = optional(number)
-      }), null)
-      use_dedicated_host = optional(bool, false)
-      pool_config = list(object({
-        size                         = number
-        schedule_expression          = string
-        schedule_expression_timezone = string
-      }))
-      runner_user                   = string
-      enable_userdata               = bool
-      instance_target_capacity_type = string
-      vpc_id                        = optional(string, null)
-      subnet_ids                    = optional(list(string), null)
-      block_device_mappings = list(object({
-        delete_on_termination = bool
-        device_name           = string
-        encrypted             = bool
-        iops                  = number
-        kms_key_id            = string
-        snapshot_id           = string
-        throughput            = number
-        volume_size           = number
-        volume_type           = string
-      }))
+
+      lambda = optional(object({
+        tags = optional(map(string), {})
+      }), {})
+
+      queue = optional(object({
+        delay_webhook_event            = optional(number, 30)
+        job_queue_retention_in_seconds = optional(number, 86400)
+        event_source_mapping = optional(object({
+          batch_size                         = optional(number, null)
+          maximum_batching_window_in_seconds = optional(number, null)
+        }), {})
+        redrive_build_queue = optional(object({
+          enabled         = bool
+          maxReceiveCount = number
+          }), {
+          enabled         = false
+          maxReceiveCount = null
+        })
+        tags = optional(map(string), {})
+      }), {})
+
+      scale_up = optional(object({
+        reserved_concurrent_executions = optional(number, 1)
+        job_queued_check_enabled       = optional(bool, null)
+        tags                           = optional(map(string), {})
+      }), {})
+
+      scale_down = optional(object({
+        schedule_expression             = optional(string, "cron(*/5 * * * ? *)")
+        minimum_running_time_in_minutes = optional(number, null)
+        tags                            = optional(map(string), {})
+        idle_config = optional(list(object({
+          cron             = string
+          timeZone         = string
+          idleCount        = number
+          evictionStrategy = optional(string, "oldest_first")
+        })), [])
+      }), {})
+
+      pool = optional(object({
+        config = optional(list(object({
+          schedule_expression          = string
+          schedule_expression_timezone = optional(string)
+          size                         = number
+        })), [])
+        runner_owner = optional(string, null)
+        tags         = optional(map(string), {})
+      }), {})
+
+      job_retry = optional(object({
+        enabled          = optional(bool, false)
+        delay_in_seconds = optional(number, 300)
+        delay_backoff    = optional(number, 2)
+        max_attempts     = optional(number, 1)
+        tags             = optional(map(string), {})
+        lambda = optional(object({
+          memory_size                    = optional(number, 256)
+          reserved_concurrent_executions = optional(number, 1)
+          timeout                        = optional(number, 30)
+        }), {})
+      }), {})
+
+      ssm = optional(object({
+        tags = optional(map(string), {})
+        kms_key = optional(object({
+          arn = string
+        }), null)
+        parameters = optional(object({
+          tags = optional(map(string), {})
+        }), {})
+        housekeeper = optional(object({
+          tags = optional(map(string), {})
+        }), {})
+      }), {})
+
+      observability = optional(object({
+        logs = optional(object({
+          tags = optional(map(string), {})
+        }), {})
+      }), {})
+
+      compute_provider = object({
+        ec2 = optional(object({
+          metadata_options = optional(object({
+            instance_metadata_tags      = optional(string, "enabled")
+            http_endpoint               = optional(string, "enabled")
+            http_tokens                 = optional(string, "required")
+            http_put_response_hop_limit = optional(number, 1)
+          }), {})
+          ami = optional(object({
+            filter = optional(map(list(string)), { state = ["available"] })
+            owners = optional(list(string), ["amazon"])
+            id_ssm_parameter = optional(object({
+              arn = string
+            }), null)
+            kms_key = optional(object({
+              arn = string
+            }), null)
+          }), null)
+          block_device_mappings = optional(list(object({
+            delete_on_termination      = optional(bool, true)
+            device_name                = optional(string, "/dev/xvda")
+            encrypted                  = optional(bool, true)
+            iops                       = optional(number)
+            kms_key_id                 = optional(string)
+            snapshot_id                = optional(string)
+            throughput                 = optional(number)
+            volume_initialization_rate = optional(number)
+            volume_size                = number
+            volume_type                = optional(string, "gp3")
+            })), [{
+            volume_size = 30
+          }])
+          create_service_linked_role_spot = optional(bool, false)
+          credit_specification            = optional(string, null)
+          ebs_optimized                   = optional(bool, false)
+          cloudwatch_agent = optional(object({
+            enabled = optional(bool, true)
+            config  = optional(string, null)
+          }), {})
+          binaries_syncer = optional(object({
+            enabled = optional(bool, true)
+          }), {})
+          detailed_monitoring_enabled = optional(bool, false)
+          ssm_enabled                 = optional(bool, false)
+          user_data = optional(object({
+            enabled               = optional(bool, true)
+            template              = optional(string, null)
+            content               = optional(string, null)
+            pre_install           = optional(string, "")
+            post_install          = optional(string, "")
+            debug_logging_enabled = optional(bool, false)
+          }), {})
+          instance_allocation_strategy  = optional(string, "lowest-price")
+          instance_max_spot_price       = optional(string, null)
+          instance_target_capacity_type = optional(string, "spot")
+          instance_type_priorities      = optional(map(number), null)
+          instance_types                = list(string)
+          additional_security_group_ids = optional(list(string), [])
+          instance_profile = optional(object({
+            name = string
+          }), null)
+          enable_on_demand_failover_for_errors = optional(list(string), [])
+          scale_errors = optional(list(string), [
+            "UnfulfillableCapacity",
+            "MaxSpotInstanceCountExceeded",
+            "TargetCapacityLimitExceededException",
+            "RequestLimitExceeded",
+            "ResourceLimitExceeded",
+            "MaxSpotInstanceCountExceeded",
+            "MaxSpotFleetRequestCountExceeded",
+            "InsufficientInstanceCapacity",
+            "InsufficientCapacityOnHost",
+          ])
+          subnet_ids = optional(list(string), null)
+          vpc_id     = optional(string, null)
+          cpu_options = optional(object({
+            core_count            = optional(number)
+            threads_per_core      = optional(number)
+            amd_sev_snp           = optional(string)
+            nested_virtualization = optional(string)
+          }), null)
+          placement = optional(object({
+            affinity                = optional(string)
+            availability_zone       = optional(string)
+            group_id                = optional(string)
+            group_name              = optional(string)
+            host_id                 = optional(string)
+            host_resource_group_arn = optional(string)
+            spread_domain           = optional(string)
+            tenancy                 = optional(string)
+            partition_number        = optional(number)
+          }), null)
+          license_specifications = optional(list(object({
+            license_configuration_arn = string
+          })), [])
+          use_dedicated_host = optional(bool, false)
+          log_files = optional(list(object({
+            log_group_name   = string
+            prefix_log_group = bool
+            file_path        = string
+            log_stream_name  = string
+            log_class        = optional(string, "STANDARD")
+          })), null)
+          tags = optional(map(string), {})
+        }), null)
+      })
+
+      matcherConfig = object({
+        labelMatchers           = list(list(string))
+        exactMatch              = optional(bool, false)
+        bidirectionalLabelMatch = optional(bool, false)
+        priority                = optional(number, 999)
+        enableDynamicLabels     = optional(bool, false)
+        awsDynamicLabelsPolicy = optional(object({
+          blocked_keys = optional(list(string), [])
+          restricted_keys = optional(map(object({
+            allowed = optional(list(string), [])
+            denied  = optional(list(string), [])
+            max     = optional(string, null)
+          })), {})
+        }), null)
+      })
     }))
   })
 
+  validation {
+    condition = alltrue([
+      for runner_config in values(var.ec2_deployment_specs.runner_specs) :
+      try(
+        length(runner_config.compute_provider.ec2[*]) == 1
+        && length(runner_config.compute_provider.ec2.ami[*]) == 1
+        && length(runner_config.compute_provider.ec2.ami.id_ssm_parameter[*]) == 0,
+        false,
+      )
+    ])
+    error_message = "Forge EC2 runner_specs must configure a module-managed ami block; ami = null and external ami.id_ssm_parameter ownership are not supported."
+  }
+
+  validation {
+    condition = alltrue([
+      for runner_config in values(var.ec2_deployment_specs.runner_specs) :
+      try(!runner_config.compute_provider.ec2.user_data.debug_logging_enabled, false)
+    ])
+    error_message = "Forge EC2 runner_specs do not support user_data.debug_logging_enabled while the upstream v1 adapter is active."
+  }
+
+  validation {
+    condition = alltrue([
+      for runner_config in values(var.ec2_deployment_specs.runner_specs) :
+      try(
+        length(runner_config.compute_provider.ec2.instance_profile[*]) == 0
+        && length(runner_config.runner.iam.role[*]) == 0,
+        false,
+      )
+    ])
+    error_message = "Forge EC2 runner_specs do not support external runner.iam.role or compute_provider.ec2.instance_profile ownership while the upstream v1 adapter is active."
+  }
+
+  validation {
+    condition = alltrue([
+      for runner_config in values(var.ec2_deployment_specs.runner_specs) :
+      length(runner_config.tags) == 0
+      && length(runner_config.runner.tags) == 0
+      && length(runner_config.lambda.tags) == 0
+      && length(runner_config.queue.tags) == 0
+      && length(runner_config.scale_up.tags) == 0
+      && length(runner_config.scale_down.tags) == 0
+      && length(runner_config.pool.tags) == 0
+      && length(runner_config.job_retry.tags) == 0
+      && length(runner_config.ssm.tags) == 0
+      && length(runner_config.ssm.parameters.tags) == 0
+      && length(runner_config.ssm.housekeeper.tags) == 0
+      && length(runner_config.observability.logs.tags) == 0
+    ])
+    error_message = "Forge EC2 runner_specs only support compute_provider.ec2.tags while the upstream v1 adapter is active; all other v2 per-lane tag maps must remain empty."
+  }
+
+  validation {
+    condition = alltrue([
+      for runner_config in values(var.ec2_deployment_specs.runner_specs) :
+      runner_config.runner.iam.additional_trust_policy_json == null
+      && runner_config.runner.iam.path == null
+      && runner_config.runner.iam.permissions_boundary == null
+      && runner_config.job_retry.lambda.reserved_concurrent_executions == 1
+      && runner_config.ssm.kms_key == null
+    ])
+    error_message = "Forge EC2 runner_specs do not support per-lane IAM trust/path/boundary, non-default job-retry Lambda reserved concurrency, or per-lane SSM KMS keys while the upstream v1 adapter is active."
+  }
+
   description = <<-EOT
-  EC2 deployment configuration for GitHub Actions runners.
+  EC2 deployment configuration for GitHub Actions runners. The public runner
+  shape follows the nested v2 EC2 contract and is translated internally to the
+  released upstream v1 multi_runner_config interface.
 
   Top-level fields:
     - lambda_subnet_ids: Subnets where runner-related lambdas execute.
       These can be more permissive than the runner subnets.
-    - subnet_ids       : Subnets where the EC2 runners are launched.
+    - subnet_ids       : Default subnets for EC2 runners.
     - vpc_id           : VPC that contains both runner and lambda subnets.
-    - runner_specs     : Map of runner pool keys to their EC2 sizing and
-                         scheduling configuration.
+    - runner_specs     : Map of EC2 runner lanes.
 
   runner_specs[*] object fields:
-    - ami_filter      : Name/state filters used to select the runner AMI.
-    - ami_kms_key_arn : KMS key ARN used to encrypt AMI EBS volumes.
-    - ami_owners      : List of AWS account IDs that own the AMI.
-    - runner_labels   : Base GitHub labels applied to jobs for this pool.
-    - runner_os       : Runner operating system (for example, linux).
-    - runner_architecture: CPU architecture (for example, x86_64 or arm64).
-    - extra_labels    : Additional GitHub labels that further specialize
-                        this runner pool.
-    - enable_dynamic_labels: Enables dynamic `ghr-` labels for this runner
-                        pool.
-    - aws_dynamic_labels_policy: Optional policy for `ghr-ec2-*` labels for
-                        this runner pool.
-    - lambda_event_source_mapping_batch_size: Optional maximum number of queued
-                        jobs passed to the scale-up Lambda per invocation.
-    - lambda_event_source_mapping_maximum_batching_window_in_seconds: Optional
-                        maximum time to collect queued jobs before invoking the
-                        scale-up Lambda.
-    - redrive_build_queue: Optional dead-letter queue redrive configuration.
-                        Controls whether redrive is enabled and how many times a
-                        message can be received before moving to the dead-letter
-                        queue.
-    - max_instances   : Maximum number of EC2 runners in this pool.
-    - min_run_time    : Minimum job run time (in minutes) before a runner
-                        is eligible for scale-down.
-    - instance_types  : Allowed EC2 instance types for runners in this pool.
-    - placement       : Optional EC2 placement configuration for the runner
-                        launch template.
-    - license_specifications: Optional EC2 License Manager configuration ARNs.
-    - use_dedicated_host: Whether this runner pool should use EC2 dedicated
-                        hosts.
-    - pool_config     : List of pool size schedules (size + cron expression
-                        and optional time zone) controlling baseline capacity.
-    - runner_user     : OS user under which the GitHub runner process runs.
-    - enable_userdata : Whether the module should inject its standard
-                        userdata to configure the runner VM.
-    - instance_target_capacity_type: EC2 capacity type to use (spot or
-                        on-demand).
-    - block_device_mappings: EBS volume configuration for the runner
-                        instances, including size, type, encryption, and KMS.
+    - runner          : Provider-neutral OS, architecture, labels, registration,
+                        hooks, capacity, and IAM-policy configuration.
+    - github          : Organization-versus-repository runner registration.
+    - queue           : Webhook delay, retention, Lambda batching, and DLQ
+                        redrive configuration.
+    - scale_up        : Scale-up concurrency and queued-job checks.
+    - scale_down      : Scale-down schedule, minimum runtime, and idle runners.
+    - pool            : Scheduled warm-pool sizes and runner owner.
+    - job_retry       : Retry timing, attempts, and Lambda sizing.
+    - matcherConfig   : Static and dynamic GitHub label matching.
+    - compute_provider: Nested v2-compatible EC2 provider configuration.
+    - tags/lambda/ssm/observability: Included for v2 contract compatibility.
+                        Tag scopes and per-lane SSM KMS settings that cannot be
+                        represented by v1 must retain their defaults.
+
+  compute_provider.ec2 fields:
+    - ami             : Upstream-compatible EC2 AMI configuration.
+                        Forge requires a module-managed AMI block; null and
+                        external AMI parameter ownership are unsupported.
+    - metadata_options: EC2 instance metadata service configuration.
+    - block_device_mappings: EBS mappings for runner instances.
+    - cloudwatch_agent/binaries_syncer/user_data: Runner bootstrap configuration.
+                        user_data.debug_logging_enabled must remain false while
+                        the stable upstream v1 adapter is active.
+    - instance_types and allocation fields: EC2 Fleet capacity configuration.
+    - vpc_id/subnet_ids/additional_security_group_ids: Per-lane networking.
+    - cpu_options/placement/license_specifications: EC2 launch-template options.
+    - instance_profile: Upstream contract field reserved for future Forge support.
+    - log_files/tags  : EC2 logging and resource tags.
+
+  The v7.10.1 compatibility adapter also requires external runner IAM ownership,
+  per-lane IAM trust/path/boundary settings, and non-default job-retry Lambda
+  reserved concurrency to remain unset. These constraints prevent accepted v2
+  settings from being silently discarded by the stable v1 module.
   EOT
 }
 

@@ -63,56 +63,132 @@ locals {
   ec2_runner_specs = {
     for size, spec in local.config.ec2_runner_specs :
     size => {
-      ami_filter = {
-        name  = [spec.ami_name],
-        state = ["available"],
+      # Keep the former Forge v1 behavior explicit while adopting the v2 shape.
+      runner = {
+        os           = spec.runner_os
+        architecture = spec.runner_architecture
+        extra_labels = [
+          "ec2",
+          "rgn:${local.region_alias}",
+          "vpc:${local.vpc_alias}",
+          "tnt:${local.tenant_name}",
+        ]
+        group_name    = local.runner_group_name
+        run_as        = spec.runner_user
+        maximum_count = spec.max_instances
+        ephemeral     = true
       }
-      ami_owners          = [spec.ami_owner]
-      ami_kms_key_arn     = spec.ami_kms_key_arn
-      runner_os           = spec.runner_os
-      runner_architecture = spec.runner_architecture
-      runner_labels = [
-        "type:${spec.type}",
-        "self-hosted",
-        spec.runner_architecture,
-        "env:ops-${include.env.locals.env}",
-      ]
-      extra_labels = [
-        "ec2",
-        "rgn:${local.region_alias}",
-        "vpc:${local.vpc_alias}",
-        "tnt:${local.tenant_name}",
-      ]
-      enable_userdata                                                = true
-      enable_dynamic_labels                                          = try(spec.enable_dynamic_labels, false)
-      aws_dynamic_labels_policy                                      = try(spec.aws_dynamic_labels_policy, null)
-      lambda_event_source_mapping_batch_size                         = try(spec.lambda_event_source_mapping_batch_size, 10)
-      lambda_event_source_mapping_maximum_batching_window_in_seconds = try(spec.lambda_event_source_mapping_maximum_batching_window_in_seconds, 0)
-      redrive_build_queue                                            = try(spec.redrive_build_queue, {})
-      runner_user                                                    = spec.runner_user
-      instance_target_capacity_type                                  = "on-demand"
-      min_run_time                                                   = 30
-      max_instances                                                  = spec.max_instances
-      instance_types                                                 = spec.instance_types
-      placement                                                      = try(spec.placement, null)
-      license_specifications                                         = try(spec.license_specifications, null)
-      use_dedicated_host                                             = try(spec.use_dedicated_host, false)
-      vpc_id                                                         = try(spec.vpc_id, null)
-      subnet_ids                                                     = try(spec.subnet_ids, null)
-      block_device_mappings = [{
-        delete_on_termination = true
-        device_name           = spec.volume.device_name
-        encrypted             = true
-        iops                  = spec.volume.iops
-        kms_key_id            = null
-        snapshot_id           = null
-        throughput            = spec.volume.throughput
-        volume_size           = spec.volume.size
-        volume_type           = spec.volume.type
-      }]
-      pool_config = spec.pool_config
+      github = {
+        organization_runners = true
+      }
+      queue = {
+        delay_webhook_event            = 0
+        job_queue_retention_in_seconds = 172800
+        event_source_mapping = {
+          batch_size                         = try(spec.lambda_event_source_mapping_batch_size, 10)
+          maximum_batching_window_in_seconds = try(spec.lambda_event_source_mapping_maximum_batching_window_in_seconds, 0)
+        }
+        redrive_build_queue = {
+          enabled         = try(spec.redrive_build_queue.enabled, true)
+          maxReceiveCount = try(spec.redrive_build_queue.maxReceiveCount, 10)
+        }
+      }
+      scale_up = {
+        job_queued_check_enabled = false
+      }
+      scale_down = {
+        minimum_running_time_in_minutes = 30
+      }
+      pool = {
+        config       = spec.pool_config
+        runner_owner = local.config.gh_config.ghes_org
+      }
+      compute_provider = {
+        ec2 = {
+          metadata_options = {
+            http_endpoint               = "enabled"
+            http_put_response_hop_limit = 2
+            http_tokens                 = "optional"
+            instance_metadata_tags      = "enabled"
+          }
+          ami = {
+            filter = {
+              name  = [spec.ami_name]
+              state = ["available"]
+            }
+            owners = [spec.ami_owner]
+            kms_key = trimspace(spec.ami_kms_key_arn) == "" ? null : {
+              arn = spec.ami_kms_key_arn
+            }
+          }
+          create_service_linked_role_spot = true
+          cloudwatch_agent = {
+            enabled = true
+          }
+          binaries_syncer = {
+            enabled = false
+          }
+          detailed_monitoring_enabled = true
+          ssm_enabled                 = true
+          user_data = {
+            enabled     = true
+            pre_install = "# No pre-install steps."
+          }
+          instance_target_capacity_type = "on-demand"
+          instance_types                = spec.instance_types
+          placement                     = try(spec.placement, null)
+          license_specifications        = try(spec.license_specifications, null)
+          use_dedicated_host            = try(spec.use_dedicated_host, false)
+          vpc_id                        = try(spec.vpc_id, null)
+          subnet_ids                    = try(spec.subnet_ids, null)
+          scale_errors                  = try(spec.scale_errors, null)
+          block_device_mappings = [{
+            delete_on_termination = true
+            device_name           = spec.volume.device_name
+            encrypted             = true
+            iops                  = spec.volume.iops
+            kms_key_id            = null
+            snapshot_id           = null
+            throughput            = spec.volume.throughput
+            volume_size           = spec.volume.size
+            volume_type           = spec.volume.type
+          }]
+        }
+      }
+      matcherConfig = {
+        labelMatchers = concat(
+          [[
+            "type:${spec.type}",
+            "self-hosted",
+            spec.runner_architecture,
+            "env:ops-${include.env.locals.env}",
+          ]],
+          concat([
+            for label_count in range(1, 5) : concat([
+              for start in range(0, 5 - label_count) : concat(
+                [
+                  "type:${spec.type}",
+                  "self-hosted",
+                  spec.runner_architecture,
+                  "env:ops-${include.env.locals.env}",
+                ],
+                slice([
+                  "ec2",
+                  "rgn:${local.region_alias}",
+                  "vpc:${local.vpc_alias}",
+                  "tnt:${local.tenant_name}",
+                ], start, start + label_count),
+              )
+            ])
+          ]...),
+        )
+        exactMatch             = true
+        enableDynamicLabels    = try(spec.enable_dynamic_labels, false)
+        awsDynamicLabelsPolicy = try(spec.aws_dynamic_labels_policy, null)
+      }
     }
   }
+
   arc_cluster_name    = local.config.arc_cluster_name
   migrate_arc_cluster = local.config.migrate_arc_cluster
 
