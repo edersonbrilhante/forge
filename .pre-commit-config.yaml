@@ -167,7 +167,7 @@ repos:
         name: Python · Import sorter
 
   - repo: https://github.com/PyCQA/autoflake
-    rev: 2d3853a9f31d97783fb2e181d41cd82a6babd666  # frozen: v2.3.3
+    rev: 6d9dd2716540ab776f29c7b896cd3052ef4619b2  # frozen: v2.4.0
     hooks:
       - id: autoflake
         name: Python · Remove unused imports
