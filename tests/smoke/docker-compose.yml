@@ -12,7 +12,7 @@
 # answers through the AWS CLI before pytest starts.
 services:
   ministack:
-    image: ${MINISTACK_IMAGE:-ministackorg/ministack:1.5.8-full@sha256:2084eb9206bed235405607f37b7e794928dde9da8e207f31ac847945f68159ad}
+    image: ${MINISTACK_IMAGE:-ministackorg/ministack:1.5.9-full@sha256:b098f16eb7c78ba2e5f84f0db58699eff68a4865fe1f6e299449d28126e81f3d}
     container_name: forge-ministack
     ports:
       - 127.0.0.1:4566:4566
