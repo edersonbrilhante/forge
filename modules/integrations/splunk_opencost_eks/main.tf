@@ -2,7 +2,7 @@ resource "helm_release" "managed_prometheus" {
   name             = "prometheus"
   repository       = "https://prometheus-community.github.io/helm-charts"
   chart            = "prometheus"
-  version          = "29.27.2"
+  version          = "29.30.0"
   namespace        = "prometheus-system"
   create_namespace = true
 
