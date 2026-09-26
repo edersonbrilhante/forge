@@ -81,7 +81,7 @@ resource "aws_iam_policy" "dynamodb_policy" {
 module "clean_global_lock_lambda" {
   #checkov:skip=CKV_TF_1:Module source uses Renovate-managed version tags; commit SHA pinning is an accepted policy tradeoff.
   source  = "terraform-aws-modules/lambda/aws"
-  version = "8.8.0"
+  version = "8.9.0"
 
   function_name = "${var.prefix}-clean-global-lock"
   handler       = "github_clean_global_lock.lambda_handler"
