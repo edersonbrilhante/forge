@@ -1,7 +1,7 @@
 module "redrive_deadletter_lambda" {
   #checkov:skip=CKV_TF_1:Module source uses Renovate-managed version tags; commit SHA pinning is an accepted policy tradeoff.
   source  = "terraform-aws-modules/lambda/aws"
-  version = "8.8.0"
+  version = "8.9.0"
 
   function_name = "${var.prefix}-redrive-deadletter"
   handler       = "redrive_deadletter.lambda_handler"
