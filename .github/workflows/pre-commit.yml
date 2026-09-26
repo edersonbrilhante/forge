@@ -29,7 +29,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     container:
-      image: ghcr.io/cisco-open/forge-pre-commit:main@sha256:042f1c5a9de54452c796c2b5fc1f8f3c852fb022242ce474a57505a7091f94da
+      image: ghcr.io/cisco-open/forge-pre-commit:main@sha256:fe1e7d00254f81e9a3eecc694cd6bbfea41ea03741d00f1f77b244ee48d46dfb
 
     if: github.event.pull_request.user.login != 'dependabot[bot]'
     steps:
