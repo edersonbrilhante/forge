@@ -83,7 +83,7 @@ repos:
   # Commit Message Hooks
   # ---------------------
   - repo: https://github.com/commitizen-tools/commitizen
-    rev: db073f6e2776db0e634dc8d6c20d4123a1cab086  # frozen: v4.18.1
+    rev: 3f5ccc87b27966d9ed21cf5ea8ec2fba38ca65ce  # frozen: v4.19.0
     hooks:
       - id: commitizen
         name: Git · Validate commit message
@@ -173,7 +173,7 @@ repos:
         name: Python · Remove unused imports
 
   - repo: https://github.com/PyCQA/flake8
-    rev: d93590f5be797aabb60e3b09f2f52dddb02f349f  # frozen: 7.3.0
+    rev: 7eccf20b526fe4f2230bf9afeeef2fc9f97faf8d  # frozen: 7.4.1
     hooks:
       - id: flake8
         name: Python · Linter
@@ -302,7 +302,7 @@ repos:
   # Ansible Hooks
   # ---------------------
   - repo: https://github.com/ansible/ansible-lint
-    rev: 665d9e07a1943254d2910faffc106adaf7ea7294  # frozen: v26.8.0
+    rev: e7f397ad6dfa20d274afa17cd7bbedd84ed136f5  # frozen: v26.9.0
     hooks:
       - id: ansible-lint
         name: Ansible · Linter
