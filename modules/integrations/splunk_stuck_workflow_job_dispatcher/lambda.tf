@@ -10,7 +10,7 @@ resource "aws_cloudwatch_log_group" "dispatcher" {
 module "dispatcher" {
   #checkov:skip=CKV_TF_1:Module source uses Renovate-managed version tags; commit SHA pinning is an accepted policy tradeoff.
   source  = "terraform-aws-modules/lambda/aws"
-  version = "8.8.0"
+  version = "8.8.2"
 
   function_name = var.name_prefix
   handler       = "handler.lambda_handler"
@@ -76,7 +76,7 @@ resource "aws_cloudwatch_log_group" "worker" {
 module "worker" {
   #checkov:skip=CKV_TF_1:Module source uses Renovate-managed version tags; commit SHA pinning is an accepted policy tradeoff.
   source  = "terraform-aws-modules/lambda/aws"
-  version = "8.8.0"
+  version = "8.8.2"
 
   function_name = "${var.name_prefix}-worker"
   handler       = "worker.lambda_handler"

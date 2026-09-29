@@ -1,7 +1,7 @@
 module "register_github_app_runner_group_lambda" {
   #checkov:skip=CKV_TF_1:Module source uses Renovate-managed version tags; commit SHA pinning is an accepted policy tradeoff.
   source  = "terraform-aws-modules/lambda/aws"
-  version = "8.8.0"
+  version = "8.8.2"
 
   function_name = "${var.prefix}-register-github-app-runner-group"
   handler       = "github_app_runner_group.lambda_handler"
