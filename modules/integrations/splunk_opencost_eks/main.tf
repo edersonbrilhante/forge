@@ -53,7 +53,7 @@ resource "helm_release" "opencost" {
   name             = "opencost"
   repository       = "https://opencost.github.io/opencost-helm-chart"
   chart            = "opencost"
-  version          = "2.5.31"
+  version          = "2.5.32"
   namespace        = "opencost"
   create_namespace = true
 
