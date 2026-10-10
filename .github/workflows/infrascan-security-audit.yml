@@ -26,7 +26,7 @@ jobs:
       contents: read # Required to checkout repository content for scanning.
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
         with:
           egress-policy: audit
 
@@ -52,7 +52,7 @@ jobs:
             ./ .infrascan-src/
 
       - name: Run InfraScan
-        uses: soldevelo/infrascan@0720e528a521c3ee1c4f1f658698cf9d37b3c7f9 # v1.1.1
+        uses: soldevelo/infrascan@d014b41beb18257680965b5c07d9d53de53bc042 # v1.2.2
         with:
           directory: .infrascan-src
           scanner: comprehensive
