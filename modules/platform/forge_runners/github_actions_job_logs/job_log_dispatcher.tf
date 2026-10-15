@@ -5,7 +5,7 @@ locals {
 module "job_log_dispatcher" {
   #checkov:skip=CKV_TF_1:Module source uses Renovate-managed version tags; commit SHA pinning is an accepted policy tradeoff.
   source  = "terraform-aws-modules/lambda/aws"
-  version = "8.8.0"
+  version = "8.8.2"
 
   function_name = local.resource_name_dispatcher
   handler       = "job_log_dispatcher.lambda_handler"
