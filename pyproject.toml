@@ -6,12 +6,12 @@ dependencies = []
 
 [dependency-groups]
 docs = [
-    "mkdocs-material==9.7.7",
+    "mkdocs-material==9.8.0",
 ]
 
 # Tools baked into the pre-commit Docker image for local system hooks.
 pre-commit-image = [
-    "pre-commit==4.6.2",
+    "pre-commit==4.7.0",
     "bandit==1.9.4",
     "pip-audit==2.10.1",
     "uv==0.12.19",
@@ -28,7 +28,7 @@ forge-github-app-register = [
 # Pinned deliberately; CI installs these exact versions. Bump via Renovate like
 # the rest of the repo.
 lambda-tests = [
-    "pytest==9.1.1",
+    "pytest==9.2.0",
     "pytest-cov==7.1.0",
     "moto[all]==5.2.3",
     "boto3==1.43.103",
@@ -38,12 +38,12 @@ lambda-tests = [
     "requests==2.34.2",
     "cryptography==50.0.1",
     "responses==0.26.3",
-    "hypothesis==6.167.1",
+    "hypothesis==6.170.14",
 ]
 
 # Dev/test deps for the MiniStack smoke suite under tests/smoke.
 # No moto here: these tests point boto3 at the local MiniStack endpoint.
 smoke-tests = [
-    "pytest==9.1.1",
+    "pytest==9.2.0",
     "boto3==1.43.103",
 ]
