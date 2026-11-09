@@ -54,7 +54,7 @@ runs:
         lock-id: forge_terraform_${{ inputs.tf-path }}
 
     - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@cbe3b392738ccf3f987d68400dafcf4b0624a56c # v6.2.4
+      uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
       with:
         role-to-assume: arn:aws:iam::${{ inputs.aws-account-id }}:role/${{ inputs.role-name }}
         aws-region: ${{ inputs.aws-region }}
@@ -67,7 +67,7 @@ runs:
           GITHUB_APP_AUTOMATION,/cicd/common/github_app_automation
         parse-json-secrets: true
 
-    - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+    - uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
       id: app-token
       with:
         client-id: ${{ env.GITHUB_APP_AUTOMATION_CLIENT_ID }}
