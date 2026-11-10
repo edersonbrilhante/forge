@@ -10,7 +10,7 @@ resource "aws_cloudwatch_log_group" "dependency_monitor" {
 module "dependency_monitor" {
   #checkov:skip=CKV_TF_1:Module source uses a Renovate-managed release tag.
   source  = "terraform-aws-modules/lambda/aws"
-  version = "8.8.0"
+  version = "8.8.2"
 
   function_name = local.dependency_monitor_function_name
   description   = "Probes tenant GitHub App authentication, organization runner API health, rate limits, and regional SSM access."
