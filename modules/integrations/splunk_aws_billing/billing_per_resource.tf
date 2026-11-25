@@ -5,7 +5,7 @@ locals {
 module "cur_per_resource" {
   #checkov:skip=CKV_TF_1:Module source uses Renovate-managed version tags; commit SHA pinning is an accepted policy tradeoff.
   source  = "terraform-aws-modules/lambda/aws"
-  version = "8.8.0"
+  version = "8.8.2"
 
   function_name = local.cur_per_resource_lambda_name
   description   = "Processes AWS Billing CUR reports per resource and sends data to Splunk"
